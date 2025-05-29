@@ -4,7 +4,9 @@ import 'package:teamshare/pages/message/bloc/message_bloc.dart';
 import 'package:teamshare/pages/message/widgets/message_list.dart';
 
 class MessagePage extends StatelessWidget {
-  const MessagePage({super.key});
+  final String? teamId;
+
+  const MessagePage({super.key, this.teamId});
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +14,7 @@ class MessagePage extends StatelessWidget {
       body: Center(
         child: BlocProvider<MessageBloc>(
           create: (context) => MessageBloc(),
-          child: MessageList(),
+          child: MessageList(teamId: teamId),
         ),
       ),
     );

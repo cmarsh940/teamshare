@@ -35,6 +35,8 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Processing Data')));
+
+      Navigator.pop(context);
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:teamshare/auth/auth_bloc.dart';
 import 'package:teamshare/pages/dashboard/bloc/dashboard_bloc.dart';
 import 'package:teamshare/pages/team/widgets/create_team_form.dart';
+import 'package:teamshare/pages/team/widgets/team_list.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -20,45 +21,70 @@ class DashboardPage extends StatelessWidget {
               return Center(child: CircularProgressIndicator());
             } else if (state is Loaded) {
               return Container(
-                margin: const EdgeInsets.all(20),
+                margin: const EdgeInsets.only(top: 20),
                 child: Column(
                   children: [
-                    Row(
-                      children: [
-                        Chip(
-                          label: Text('My Teams'),
-                          backgroundColor: Colors.black,
-                          labelStyle: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => TeamList(teams: state.teams),
+                                ),
+                              );
+                            },
+                            child: Chip(
+                              label: Text('My Teams'),
+                              backgroundColor: Colors.black,
+                              labelStyle: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Row(
-                      children: [
-                        Padding(padding: const EdgeInsets.only(left: 5)),
-                        const Text(
-                          'Teams',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: Row(
+                        children: [
+                          Padding(padding: const EdgeInsets.only(left: 5)),
+                          const Text(
+                            'Teams',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.arrow_forward),
-                          onPressed: () {
-                            // Navigate to team details
-                          },
-                        ),
-                      ],
+                          IconButton(
+                            icon: const Icon(Icons.arrow_forward),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => TeamList(teams: state.teams),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                     SizedBox(
+                      width: double.infinity,
                       height: 120,
                       child: ListView.builder(
+                        padding: EdgeInsets.zero,
                         scrollDirection: Axis.horizontal,
                         itemCount: state.teams.length,
                         itemBuilder: (context, index) {
@@ -71,7 +97,7 @@ class DashboardPage extends StatelessWidget {
                             onTap: () {
                               BlocProvider.of<AuthBloc>(
                                 context,
-                              ).add(ChangePage(1));
+                              ).add(ChangePage(team['_id'] ?? ''));
                             },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -122,7 +148,11 @@ class DashboardPage extends StatelessWidget {
                               MaterialPageRoute(
                                 builder: (context) => const CreateTeamForm(),
                               ),
-                            );
+                            ).then((_) {
+                              BlocProvider.of<DashboardBloc>(
+                                context,
+                              ).add(LoadTeams());
+                            });
                           },
                         ),
                         Column(

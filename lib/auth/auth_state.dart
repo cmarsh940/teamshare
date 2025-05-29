@@ -46,7 +46,7 @@ class FirstTimeForm extends AuthState {
 }
 
 class ShowTeamPage extends AuthState {
-  final int page;
+  final String page;
 
   ShowTeamPage(this.page);
 

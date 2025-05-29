@@ -15,6 +15,15 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
   ) async {
     emit(LoadingMessages());
     try {
+      if (event.teamId == null) {
+        await Future.delayed(Duration(seconds: 2));
+        final messages = []; // Replace with actual notification fetching logic
+        if (messages.isEmpty) {
+          emit(MessagesEmpty());
+        } else {
+          emit(MessageLoaded(messages));
+        }
+      }
       // Simulate fetching notifications
       await Future.delayed(Duration(seconds: 2));
       final messages = []; // Replace with actual notification fetching logic

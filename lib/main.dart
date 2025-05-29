@@ -70,7 +70,7 @@ class App extends StatelessWidget {
                 }
                 if (state is ShowTeamPage) {
                   print('show team page');
-                  return TeamPage();
+                  return TeamPage(teamId: state.page);
                 }
                 if (state is Unauthenticated) {
                   print('unauthenticated');

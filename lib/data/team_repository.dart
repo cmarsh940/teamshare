@@ -8,8 +8,6 @@ class TeamRepository {
   // Example method to fetch teams
   Future<List<dynamic>> fetchTeams(dynamic id) async {
     http.Response response = await http.get(Uri.parse(''));
-
-    print('Response status: ${response.body}');
     final List<dynamic> decoded = jsonDecode(response.body);
     return decoded;
   }
@@ -21,7 +19,6 @@ class TeamRepository {
       body: jsonEncode(team),
     );
     if (response.statusCode == 200) {
-      print('Team created successfully');
       return team;
     } else {
       throw Exception('Failed to create team');

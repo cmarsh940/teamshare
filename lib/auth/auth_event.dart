@@ -29,7 +29,7 @@ class Profile extends AuthEvent {
 }
 
 class ChangePage extends AuthEvent {
-  final int page;
+  final String page;
 
   ChangePage(this.page);
 

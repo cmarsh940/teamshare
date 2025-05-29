@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
@@ -78,10 +77,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   _mapChangePageToState(ChangePage event, Emitter<AuthState> emit) async {
-    if (event.page == 0) {
+    if (event.page == '0') {
       emit(Authenticated((await _userRepository.getId())!));
-    } else if (event.page == 1) {
-      emit(ShowTeamPage(1));
+    } else {
+      emit(ShowTeamPage(event.page));
     }
   }
 }

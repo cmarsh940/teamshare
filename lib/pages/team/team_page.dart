@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:teamshare/auth/auth_bloc.dart';
+import 'package:teamshare/pages/calendar/calendar_page.dart';
+import 'package:teamshare/pages/member/member_page.dart';
+import 'package:teamshare/pages/message/message_page.dart';
 import 'package:teamshare/pages/notification/notification_page.dart';
+import 'package:teamshare/pages/photo_gallery/photo_gallery_page.dart';
 
 class TeamPage extends StatefulWidget {
-  const TeamPage({super.key});
+  final String teamId;
+
+  const TeamPage({super.key, required this.teamId});
 
   @override
   State<TeamPage> createState() => _TeamPageState();
@@ -16,11 +22,12 @@ class _TeamPageState extends State<TeamPage> {
 
   @override
   void initState() {
+    print('Team id is : ${widget.teamId}');
     _widgetOptions.add(NotificationPage());
-    _widgetOptions.add(NotificationPage());
-    _widgetOptions.add(NotificationPage());
-    _widgetOptions.add(NotificationPage());
-    _widgetOptions.add(NotificationPage());
+    _widgetOptions.add(MessagePage(teamId: widget.teamId));
+    _widgetOptions.add(PhotoGalleryPage(teamId: widget.teamId));
+    _widgetOptions.add(CalendarPage(teamId: widget.teamId));
+    _widgetOptions.add(MemberPage(teamId: widget.teamId));
 
     super.initState();
   }
@@ -45,7 +52,7 @@ class _TeamPageState extends State<TeamPage> {
           color: Colors.black,
           tooltip: 'Back Button',
           onPressed: () {
-            BlocProvider.of<AuthBloc>(context).add(ChangePage(0));
+            BlocProvider.of<AuthBloc>(context).add(ChangePage('0'));
           },
         ),
         title: Image.asset('assets/images/TEAM.png', height: 75),
