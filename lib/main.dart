@@ -5,11 +5,14 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:teamshare/auth/auth_bloc.dart';
+import 'package:teamshare/data/notification_repository.dart';
 import 'package:teamshare/data/repositories.dart';
 import 'package:teamshare/data/team_repository.dart';
 import 'package:teamshare/pages/firstTime/first_time_page.dart';
 import 'package:teamshare/pages/home.dart';
 import 'package:teamshare/pages/login/login_page.dart';
+import 'package:teamshare/pages/profile/profile_page.dart';
+import 'package:teamshare/pages/team/bloc/team_bloc.dart';
 import 'package:teamshare/pages/team/team_page.dart';
 import 'package:teamshare/shared/loading_indicator.dart';
 import 'package:teamshare/shared/splash_page.dart';
@@ -25,6 +28,16 @@ void main() async {
   final TeamRepository teamRepository = TeamRepository();
   if (!GetIt.I.isRegistered<TeamRepository>()) {
     GetIt.I.registerSingleton<TeamRepository>(teamRepository);
+  }
+
+  final teamBloc = TeamBloc(GetIt.I<TeamRepository>());
+  if (!GetIt.I.isRegistered<TeamBloc>()) {
+    GetIt.I.registerSingleton<TeamBloc>(teamBloc);
+  }
+
+  final notificationRepository = NotificationRepository();
+  if (!GetIt.I.isRegistered<NotificationRepository>()) {
+    GetIt.I.registerSingleton<NotificationRepository>(notificationRepository);
   }
 
   final sharedPreferences = await SharedPreferences.getInstance();
@@ -64,6 +77,10 @@ class App extends StatelessWidget {
                   print('uninitialized');
                   return SplashPage();
                 }
+                if (state is Unauthenticated) {
+                  print('unauthenticated');
+                  return LoginPage(userRepository: userRepository);
+                }
                 if (state is Authenticated) {
                   print('authenticated');
                   return HomePage(userRepository: userRepository);
@@ -71,10 +88,6 @@ class App extends StatelessWidget {
                 if (state is ShowTeamPage) {
                   print('show team page');
                   return TeamPage(teamId: state.page);
-                }
-                if (state is Unauthenticated) {
-                  print('unauthenticated');
-                  return LoginPage(userRepository: userRepository);
                 }
                 if (state is Loading) {
                   print('loading');
@@ -87,6 +100,10 @@ class App extends StatelessWidget {
                     user: state.user,
                     userRepository: userRepository,
                   );
+                }
+                if (state is UserProfile) {
+                  print('user profile');
+                  return ProfilePage(user: state.user);
                 } else {
                   return LoadingIndicator();
                 }

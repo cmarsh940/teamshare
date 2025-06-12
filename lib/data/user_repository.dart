@@ -6,25 +6,16 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
+import 'package:teamshare/constants.dart';
 import 'package:teamshare/models/user.dart';
 
 class UserRepository {
-  String get loginURL => '';
-
-  get finishSetupURL => null;
-
-  get getUserURL => null;
-
-  String get registerURL => '';
-
-  get updateUserURL => null;
-
   Future<User?> authenticate({
     required String email,
     required String password,
   }) async {
     var response = await http.post(
-      Uri.parse(loginURL),
+      Uri.parse(loginUrl),
       body: {'email': email, 'password': password},
     );
     if (response.statusCode == 200) {
@@ -62,7 +53,7 @@ class UserRepository {
     if (id == null) {
       return null;
     } else {
-      var url = finishSetupURL + '$id';
+      var url = finishSetupUrl + '$id';
       var _body = json.encode(user.toJson());
       final http.Response response = await http.put(
         Uri.parse(url),
@@ -202,9 +193,9 @@ class UserRepository {
     return;
   }
 
-  Future<String?> getId() async {
+  Future<String> getId() async {
     SharedPreferences prefs = GetIt.I<SharedPreferences>();
-    return prefs.getString("user_id");
+    return prefs.getString("user_id") ?? '';
   }
 
   Future<bool> checkFirstTime() async {
@@ -239,8 +230,8 @@ class UserRepository {
 
   Future<dynamic> getUser() async {
     var _token = await getToken();
-    var id = await getId();
-    var url = Uri.parse(getUserURL + '$id');
+    String id = await getId();
+    var url = Uri.parse(getUserUrl(id));
     var response = await http.get(
       url,
       headers: {HttpHeaders.authorizationHeader: "Bearer $_token"},
@@ -268,7 +259,7 @@ class UserRepository {
     String? confirmPass,
   }) async {
     var response = await http.post(
-      Uri.parse(registerURL),
+      Uri.parse(registerUrl),
       body: {
         'firstName': firstName,
         'lastName': lastName,
@@ -307,7 +298,7 @@ class UserRepository {
     if (id == null) {
       return null;
     } else {
-      var url = updateUserURL + '$id';
+      var url = updateUserUrl(id);
       var _body = json.encode(user.toJson());
       final http.Response response = await http.put(
         Uri.parse(url),

@@ -18,3 +18,9 @@ class TeamLoadEvent extends TeamEvent {
 class LoadForm extends TeamEvent {
   LoadForm() {}
 }
+
+class DeleteTeamEvent extends TeamEvent {
+  final String teamId;
+
+  DeleteTeamEvent({required this.teamId});
+}

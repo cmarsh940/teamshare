@@ -27,8 +27,17 @@ class Loaded extends TeamState {
   }
 }
 
-class Loading extends TeamState {
+class LoadingTeam extends TeamState {
   Loading() {
-    print('TeamState loading');
+    print('TeamState loading team');
   }
 }
+
+final class TeamDeleted extends TeamState {
+  final String teamId;
+  TeamDeleted({required this.teamId}) {
+    print('TeamState deleted');
+  }
+}
+
+final class TeamDeletionFailed extends TeamState {}

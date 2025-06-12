@@ -28,6 +28,7 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
         'members': [userId],
         'name': _nameController.text,
         'description': _descriptionController.text,
+        'createdBy': userId,
       };
 
       context.read<TeamBloc>().add(TeamCreateEvent(team: team));
@@ -50,7 +51,7 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
           builder: (context, state) {
             if (state is TeamInitial) {
               context.read<TeamBloc>().add(LoadForm());
-            } else if (state is Loading) {
+            } else if (state is LoadingTeam) {
               return Center(child: CircularProgressIndicator());
             } else if (state is Loaded) {
               return Container(

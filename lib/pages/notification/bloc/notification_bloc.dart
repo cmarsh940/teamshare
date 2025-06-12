@@ -1,11 +1,18 @@
 import 'package:bloc/bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:meta/meta.dart';
+import 'package:teamshare/data/notification_repository.dart';
+import 'package:teamshare/data/user_repository.dart';
 
 part 'notification_event.dart';
 part 'notification_state.dart';
 
 class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
-  NotificationBloc() : super(NotificationInitial()) {
+  final NotificationRepository _notificationRepository;
+  UserRepository userRepository = GetIt.instance<UserRepository>();
+
+  NotificationBloc(this._notificationRepository)
+    : super(NotificationInitial()) {
     on<LoadNotifications>(_mapLoadNotificationsToState);
   }
 
@@ -15,10 +22,10 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     emit(LoadingNotifications());
     try {
-      // Simulate fetching notifications
-      await Future.delayed(Duration(seconds: 2));
-      final notifications =
-          []; // Replace with actual notification fetching logic
+      final userId = await userRepository.getId();
+      final notifications = await _notificationRepository.fetchNotifications(
+        userId,
+      );
       if (notifications.isEmpty) {
         emit(NotificationEmpty());
       } else {

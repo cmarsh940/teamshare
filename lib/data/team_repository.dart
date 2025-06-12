@@ -1,13 +1,13 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:teamshare/constants.dart';
 
 class TeamRepository {
-  String get createTeamUrl => '';
-
   // Example method to fetch teams
   Future<List<dynamic>> fetchTeams(dynamic id) async {
-    http.Response response = await http.get(Uri.parse(''));
+    http.Response response = await http.get(Uri.parse(fetchTeamUrl(id)));
+
     final List<dynamic> decoded = jsonDecode(response.body);
     return decoded;
   }
@@ -33,9 +33,12 @@ class TeamRepository {
   }
 
   // Example method to delete a team
-  Future<void> deleteTeam(String teamName) async {
-    // Simulate a network call
-    await Future.delayed(Duration(seconds: 1));
-    print('Team $teamName deleted');
+  Future<void> deleteTeam(String teamId) async {
+    http.Response response = await http.delete(
+      Uri.parse(deleteTeamUrl(teamId)),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete team');
+    }
   }
 }

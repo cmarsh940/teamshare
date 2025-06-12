@@ -13,9 +13,9 @@ class LoggedIn extends AuthEvent {
   String toString() => 'LoggedIn';
 }
 
-class LoggedOut extends AuthEvent {
+class LogOut extends AuthEvent {
   @override
-  String toString() => 'LoggedOut';
+  String toString() => 'LogOut';
 }
 
 class FirstTime extends AuthEvent {

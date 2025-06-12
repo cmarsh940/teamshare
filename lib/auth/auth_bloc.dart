@@ -16,7 +16,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       super(Uninitialized()) {
     on<AppStarted>(_mapAppStartedToState);
     on<LoggedIn>(_mapLoggedInToState);
-    on<LoggedOut>(_mapLoggedOutToState);
+    on<LogOut>(_mapLoggedOutToState);
     on<FirstTime>(_mapFirstTimeToState);
     on<Profile>(_mapProfileToState);
     on<ChangePage>(_mapChangePageToState);
@@ -57,9 +57,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  _mapLoggedOutToState(LoggedOut event, Emitter<AuthState> emit) async {
-    emit(Unauthenticated());
+  _mapLoggedOutToState(LogOut event, Emitter<AuthState> emit) async {
+    print('Logging out...');
     _userRepository.signOut();
+    emit(Unauthenticated());
   }
 
   _mapProfileToState(Profile event, Emitter<AuthState> emit) async {

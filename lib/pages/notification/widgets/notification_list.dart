@@ -41,8 +41,8 @@ class _NotificationListState extends State<NotificationList> {
             itemBuilder: (context, index) {
               final notification = state.notifications[index];
               return ListTile(
-                title: Text(notification.title ?? 'No Title'),
-                subtitle: Text(notification.body ?? ''),
+                title: Text(notification['title'] ?? 'No Title'),
+                subtitle: Text(notification['message'] ?? ''),
               );
             },
           );
