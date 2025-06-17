@@ -8,3 +8,10 @@ class LoadMembers extends MemberEvent {
 
   LoadMembers(this.teamId);
 }
+
+class RemoveMemberFromTeam extends MemberEvent {
+  final String teamId;
+  final String userId;
+
+  RemoveMemberFromTeam(this.teamId, this.userId);
+}

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:teamshare/auth/auth_bloc.dart';
+import 'package:teamshare/data/user_repository.dart';
 import 'package:teamshare/pages/team/bloc/team_bloc.dart';
 
 class TeamList extends StatefulWidget {
@@ -14,6 +15,22 @@ class TeamList extends StatefulWidget {
 }
 
 class _TeamListState extends State<TeamList> {
+  final UserRepository userRepository = GetIt.I<UserRepository>();
+  String userId = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserId();
+  }
+
+  _getUserId() async {
+    final id = await userRepository.getId();
+    setState(() {
+      userId = id;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<TeamBloc>.value(
@@ -47,14 +64,18 @@ class _TeamListState extends State<TeamList> {
                   },
                   title: Text(team['name']),
                   subtitle: Text(team['description'] ?? 'No description'),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      context.read<TeamBloc>().add(
-                        DeleteTeamEvent(teamId: team['_id']),
-                      );
-                    },
-                  ),
+                  trailing:
+                      (team['admins'] != null &&
+                              (team['admins'] as List).contains(userId))
+                          ? IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              context.read<TeamBloc>().add(
+                                DeleteTeamEvent(teamId: team['_id']),
+                              );
+                            },
+                          )
+                          : null,
                 ),
               );
             },

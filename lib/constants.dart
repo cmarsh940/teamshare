@@ -12,6 +12,9 @@ const String teamsUrl = '$baseUrl/teams';
 String teamDetailUrl(String id) => '$baseUrl/teams/$id';
 String fetchTeamUrl(String id) => '$baseUrl/teams/$id';
 String deleteTeamUrl(String teamId) => '$baseUrl/teams/$teamId';
+String fetchTeamMembersUrl(String teamId) => '$baseUrl/teams/$teamId/members';
+String removeMemberUrl(String teamId, String userId) =>
+    '$baseUrl/teams/$teamId/members/$userId';
 
 // User endpoints
 const String usersUrl = '$baseUrl/users';

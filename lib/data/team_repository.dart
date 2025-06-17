@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:teamshare/constants.dart';
+import 'package:teamshare/models/team.dart';
+import 'package:teamshare/models/user.dart';
 
 class TeamRepository {
   // Example method to fetch teams
@@ -39,6 +41,25 @@ class TeamRepository {
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to delete team');
+    }
+  }
+
+  Future<Team> getTeamMembers(String teamId) async {
+    var url = fetchTeamMembersUrl(teamId);
+    var response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      var jsonResponse = jsonDecode(response.body);
+      return Team.fromJson(jsonResponse);
+    } else {
+      throw Exception('Failed to load team members');
+    }
+  }
+
+  Future<void> removeMember(String teamId, String userId) async {
+    var url = removeMemberUrl(teamId, userId);
+    var response = await http.delete(Uri.parse(url));
+    if (response.statusCode != 200) {
+      throw Exception('Failed to remove member');
     }
   }
 }

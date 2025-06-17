@@ -11,7 +11,7 @@ class User {
   String? firstName;
   bool? firstTime;
   String? lastName;
-  List<Notification>? notifications;
+  List<String>? notifications;
   String? phone;
   String? picture;
   String? token;

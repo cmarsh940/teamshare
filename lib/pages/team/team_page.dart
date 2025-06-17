@@ -64,9 +64,9 @@ class _TeamPageState extends State<TeamPage> {
             child: IconButton(
               icon: Icon(Icons.account_circle),
               color: Theme.of(context).primaryColor,
-              tooltip: 'Settings',
+              tooltip: 'Account',
               onPressed: () {
-                print('Settings');
+                BlocProvider.of<AuthBloc>(context).add(Profile());
               },
             ),
           ),

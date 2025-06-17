@@ -7,7 +7,7 @@ part 'team.g.dart';
 class Team {
   @JsonKey(name: '_id')
   String? id;
-  List<User> admins;
+  List<String> admins;
   List<String> attachments;
   String? description;
   List<User> members;
