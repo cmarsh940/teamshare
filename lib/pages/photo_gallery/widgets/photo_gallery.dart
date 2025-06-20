@@ -31,7 +31,7 @@ class _PhotoGalleryState extends State<PhotoGallery> {
           return const Center(child: CircularProgressIndicator());
         } else if (state is PhotoGalleryLoaded) {
           return Placeholder(
-            child: Text('Photo Gallery for team ${widget.teamId}'),
+            child: Text('Photo Gallery for team ${state.photos.length}'),
           );
         }
         return const Center(

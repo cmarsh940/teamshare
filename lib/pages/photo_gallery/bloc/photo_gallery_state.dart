@@ -8,7 +8,15 @@ final class PhotoGalleryInitial extends PhotoGalleryState {}
 final class PhotoGalleryLoading extends PhotoGalleryState {}
 
 final class PhotoGalleryLoaded extends PhotoGalleryState {
-  final String teamId;
+  final List<String> photos;
 
-  PhotoGalleryLoaded(this.teamId);
+  PhotoGalleryLoaded(this.photos);
 }
+
+final class PhotoGalleryError extends PhotoGalleryState {
+  final String message;
+
+  PhotoGalleryError(this.message);
+}
+
+final class PhotoGalleryEmpty extends PhotoGalleryState {}

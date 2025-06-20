@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:teamshare/constants.dart';
+import 'package:teamshare/models/post.dart';
 import 'package:teamshare/models/team.dart';
 import 'package:teamshare/models/user.dart';
 
@@ -60,6 +61,42 @@ class TeamRepository {
     var response = await http.delete(Uri.parse(url));
     if (response.statusCode != 200) {
       throw Exception('Failed to remove member');
+    }
+  }
+
+  Future<List<Post>> getTeamPosts(String teamId) async {
+    var url = fetchTeamPostsUrl(teamId);
+    var response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      var jsonResponse = jsonDecode(response.body);
+      return (jsonResponse as List).map((post) => Post.fromJson(post)).toList();
+    } else {
+      throw Exception('Failed to load team posts');
+    }
+  }
+
+  Future<List<String>> getTeamPhotos(String teamId) async {
+    var url = fetchTeamPhotosUrl(teamId);
+    var response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      print('Response: ${response.body}');
+      return (jsonDecode(response.body) as List)
+          .map((photo) => photo['photo'] as String)
+          .toList();
+    } else {
+      throw Exception('Failed to load team photos');
+    }
+  }
+
+  Future<void> addPhotoToGallery(String teamId, String photoUrl) async {
+    var url = postTeamPhotosUrl(teamId);
+    var response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'photo': photoUrl}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to add photo to gallery');
     }
   }
 }

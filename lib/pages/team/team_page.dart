@@ -6,6 +6,7 @@ import 'package:teamshare/pages/member/member_page.dart';
 import 'package:teamshare/pages/message/message_page.dart';
 import 'package:teamshare/pages/notification/notification_page.dart';
 import 'package:teamshare/pages/photo_gallery/photo_gallery_page.dart';
+import 'package:teamshare/pages/post/post_page.dart';
 
 class TeamPage extends StatefulWidget {
   final String teamId;
@@ -23,7 +24,7 @@ class _TeamPageState extends State<TeamPage> {
   @override
   void initState() {
     print('Team id is : ${widget.teamId}');
-    _widgetOptions.add(NotificationPage());
+    _widgetOptions.add(PostPage(teamId: widget.teamId));
     _widgetOptions.add(MessagePage(teamId: widget.teamId));
     _widgetOptions.add(PhotoGalleryPage(teamId: widget.teamId));
     _widgetOptions.add(CalendarPage(teamId: widget.teamId));

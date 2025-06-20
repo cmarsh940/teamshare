@@ -17,6 +17,17 @@ class PhotoGalleryPage extends StatelessWidget {
           child: PhotoGallery(teamId: teamId),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Add functionality for adding a new photo
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Add Photo functionality not implemented'),
+            ),
+          );
+        },
+        child: const Icon(Icons.add_a_photo),
+      ),
     );
   }
 }

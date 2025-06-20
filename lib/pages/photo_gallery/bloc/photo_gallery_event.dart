@@ -8,3 +8,10 @@ class LoadPhotoGallery extends PhotoGalleryEvent {
 
   LoadPhotoGallery(this.teamId);
 }
+
+class AddPhotoToGallery extends PhotoGalleryEvent {
+  final String teamId;
+  final String photoUrl;
+
+  AddPhotoToGallery(this.teamId, this.photoUrl);
+}
