@@ -19,6 +19,11 @@ String fetchTeamPostsUrl(String teamId) => '$baseUrl/teams/posts/$teamId';
 String fetchTeamPhotosUrl(String teamId) => '$baseUrl/teams/photos/$teamId';
 String postTeamPhotosUrl(String teamId) => '$baseUrl/teams/photos/$teamId';
 
+// Team calendar endpoints
+String fetchTeamCalendarUrl(String teamId) => '$baseUrl/teams/calendar/$teamId';
+String postTeamCalendarEventUrl(String teamId) =>
+    '$baseUrl/teams/calendar/$teamId';
+
 // User endpoints
 const String usersUrl = '$baseUrl/users';
 String getUserUrl(String id) => '$baseUrl/users/$id';

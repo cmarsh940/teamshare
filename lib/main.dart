@@ -8,6 +8,7 @@ import 'package:teamshare/auth/auth_bloc.dart';
 import 'package:teamshare/data/notification_repository.dart';
 import 'package:teamshare/data/repositories.dart';
 import 'package:teamshare/data/team_repository.dart';
+import 'package:teamshare/pages/calendar/bloc/calendar_bloc.dart';
 import 'package:teamshare/pages/firstTime/first_time_page.dart';
 import 'package:teamshare/pages/home.dart';
 import 'package:teamshare/pages/login/login_page.dart';
@@ -33,6 +34,11 @@ void main() async {
   final teamBloc = TeamBloc(GetIt.I<TeamRepository>());
   if (!GetIt.I.isRegistered<TeamBloc>()) {
     GetIt.I.registerSingleton<TeamBloc>(teamBloc);
+  }
+
+  final calendarBloc = CalendarBloc(GetIt.I<TeamRepository>());
+  if (!GetIt.I.isRegistered<CalendarBloc>()) {
+    GetIt.I.registerSingleton<CalendarBloc>(calendarBloc);
   }
 
   final notificationRepository = NotificationRepository();

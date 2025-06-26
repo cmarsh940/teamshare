@@ -2,33 +2,44 @@ import 'dart:math';
 
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
+import 'package:teamshare/data/team_repository.dart';
+import 'package:teamshare/models/calendar.dart';
+import 'package:teamshare/models/team.dart';
 
 part 'calendar_event.dart';
 part 'calendar_state.dart';
 
 class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
-  CalendarBloc() : super(CalendarInitial()) {
+  final TeamRepository teamRepository;
+
+  CalendarBloc(this.teamRepository) : super(CalendarInitial()) {
     on<LoadCalendar>(_mapLoadCalendarToState);
+    on<AddCalendarEvent>(_mapAddCalendarEventToState);
   }
 
   _mapLoadCalendarToState(
     LoadCalendar event,
     Emitter<CalendarState> emit,
   ) async {
-    emit(CalendarLoading());
-    print('Load calendar for team: ${event.teamId}');
     try {
-      // Simulate a network call or data fetching
-      await Future.delayed(Duration(seconds: 2), () {
-        // Generate some dummy events
-        final events = List.generate(
-          10,
-          (index) => 'Event ${index + 1} for team ${event.teamId}',
-        );
-        emit(CalendarLoaded(events: events));
-      });
+      emit(CalendarLoading());
+      final tempCalendar = await teamRepository.getTeamCalendar(event.teamId);
+      print('Loaded calendar with ${tempCalendar.length} events');
+      emit(CalendarLoaded(events: tempCalendar));
     } catch (e) {
       emit(CalendarError(message: 'Failed to load calendar'));
+    }
+  }
+
+  _mapAddCalendarEventToState(
+    AddCalendarEvent event,
+    Emitter<CalendarState> emit,
+  ) async {
+    try {
+      await teamRepository.addTeamCalendarEvent(event.teamId, event.event);
+      emit(CalendarEventAdded());
+    } catch (e) {
+      emit(CalendarError(message: 'Failed to add calendar event'));
     }
   }
 }

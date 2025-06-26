@@ -8,3 +8,10 @@ class LoadCalendar extends CalendarEvent {
 
   LoadCalendar({required this.teamId});
 }
+
+class AddCalendarEvent extends CalendarEvent {
+  final String teamId;
+  TeamCalendar event;
+
+  AddCalendarEvent({required this.teamId, required this.event});
+}

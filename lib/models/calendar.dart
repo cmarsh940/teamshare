@@ -18,21 +18,21 @@ class Recurrence {
 }
 
 @JsonSerializable(explicitToJson: true)
-class CalendarEvent {
+class TeamCalendar {
   @JsonKey(name: '_id')
   final String? id;
-  final Team team;
-  final String title;
+  final String? team;
+  final String? title;
   final String? description;
-  final DateTime start;
-  final DateTime end;
+  final DateTime? start;
+  final DateTime? end;
   final Recurrence? recurrence;
-  final User createdBy;
-  final bool notified;
+  final String? createdBy;
+  final bool? notified;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  CalendarEvent({
+  TeamCalendar({
     this.id,
     required this.team,
     required this.title,
@@ -46,7 +46,7 @@ class CalendarEvent {
     this.updatedAt,
   });
 
-  factory CalendarEvent.fromJson(Map<String, dynamic> json) =>
-      _$CalendarEventFromJson(json);
-  Map<String, dynamic> toJson() => _$CalendarEventToJson(this);
+  factory TeamCalendar.fromJson(Map<String, dynamic> json) =>
+      _$TeamCalendarFromJson(json);
+  Map<String, dynamic> toJson() => _$TeamCalendarToJson(this);
 }

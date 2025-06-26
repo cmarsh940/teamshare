@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:teamshare/auth/auth_bloc.dart';
+import 'package:teamshare/data/team_repository.dart';
 import 'package:teamshare/pages/calendar/calendar_page.dart';
 import 'package:teamshare/pages/member/member_page.dart';
 import 'package:teamshare/pages/message/message_page.dart';
-import 'package:teamshare/pages/notification/notification_page.dart';
 import 'package:teamshare/pages/photo_gallery/photo_gallery_page.dart';
 import 'package:teamshare/pages/post/post_page.dart';
 
@@ -20,6 +21,7 @@ class TeamPage extends StatefulWidget {
 class _TeamPageState extends State<TeamPage> {
   int _selectedIndex = 0;
   List<Widget> _widgetOptions = <Widget>[];
+  final TeamRepository teamRepository = GetIt.I<TeamRepository>();
 
   @override
   void initState() {
@@ -27,7 +29,9 @@ class _TeamPageState extends State<TeamPage> {
     _widgetOptions.add(PostPage(teamId: widget.teamId));
     _widgetOptions.add(MessagePage(teamId: widget.teamId));
     _widgetOptions.add(PhotoGalleryPage(teamId: widget.teamId));
-    _widgetOptions.add(CalendarPage(teamId: widget.teamId));
+    _widgetOptions.add(
+      CalendarPage(teamId: widget.teamId, teamRepository: teamRepository),
+    );
     _widgetOptions.add(MemberPage(teamId: widget.teamId));
 
     super.initState();

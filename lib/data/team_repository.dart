@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:teamshare/constants.dart';
+import 'package:teamshare/models/calendar.dart';
 import 'package:teamshare/models/post.dart';
 import 'package:teamshare/models/team.dart';
 import 'package:teamshare/models/user.dart';
@@ -97,6 +98,31 @@ class TeamRepository {
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to add photo to gallery');
+    }
+  }
+
+  Future<List<TeamCalendar>> getTeamCalendar(String teamId) async {
+    var url = fetchTeamCalendarUrl(teamId);
+    var response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      var jsonResponse = jsonDecode(response.body);
+      return (jsonResponse as List)
+          .map((event) => TeamCalendar.fromJson(event))
+          .toList();
+    } else {
+      throw Exception('Failed to load team calendar');
+    }
+  }
+
+  Future<void> addTeamCalendarEvent(String teamId, TeamCalendar event) async {
+    var url = postTeamCalendarEventUrl(teamId);
+    var response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(event.toJson()),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to add calendar event');
     }
   }
 }

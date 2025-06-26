@@ -8,13 +8,33 @@ final class CalendarInitial extends CalendarState {}
 final class CalendarLoading extends CalendarState {}
 
 final class CalendarLoaded extends CalendarState {
-  final List<String> events; // Replace with your actual event model
+  final List<TeamCalendar> events;
 
   CalendarLoaded({required this.events});
+}
+
+final class CalendarEmpty extends CalendarState {
+  CalendarEmpty();
 }
 
 final class CalendarError extends CalendarState {
   final String message;
 
   CalendarError({required this.message});
+}
+
+class CalendarEventAdded extends CalendarState {
+  CalendarEventAdded();
+}
+
+final class CalendarEventDeleted extends CalendarState {
+  final String eventId;
+
+  CalendarEventDeleted({required this.eventId});
+}
+
+final class CalendarEventUpdated extends CalendarState {
+  final TeamCalendar event;
+
+  CalendarEventUpdated({required this.event});
 }
