@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:teamshare/models/holidays.dart';
 import 'package:teamshare/pages/calendar/bloc/calendar_bloc.dart';
 
 class CalendarLayout extends StatefulWidget {
@@ -18,37 +19,19 @@ class _CalendarLayoutState extends State<CalendarLayout> {
   DateTime? _selectedDay;
   final ScrollController _scrollController = ScrollController();
 
-  // Add your holidays here
-  final Map<DateTime, List<String>> holidays = {
-    DateTime(2025, 1, 1): ["New Year's Day"],
-    DateTime(2025, 7, 4): ["Independence Day"],
-    DateTime(2025, 12, 25): ["Christmas Day"],
-    // Add more as needed
-  };
-
   @override
   void initState() {
     super.initState();
     _calendarBloc = BlocProvider.of<CalendarBloc>(context);
   }
 
-  int _findEventIndexForDate(List events, DateTime date) {
-    for (int i = 0; i < events.length; i++) {
-      final event = events[i];
-      if (event.start != null &&
-          event.start.year == date.year &&
-          event.start.month == date.month &&
-          event.start.day == date.day) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
   void _scrollToIndex(int index) {
     if (index >= 0 && _scrollController.hasClients) {
+      final itemHeight = 88.0;
+      final viewHeight = _scrollController.position.viewportDimension;
+      final offset = (index * itemHeight) - (viewHeight / 2) + (itemHeight / 2);
       _scrollController.animateTo(
-        index * 72.0,
+        offset < 0 ? 0 : offset,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
@@ -72,19 +55,18 @@ class _CalendarLayoutState extends State<CalendarLayout> {
             return a.start!.compareTo(b.start!);
           });
 
-          // Map for TableCalendar eventLoader
-          Map<DateTime, List<dynamic>> eventMap = {};
+          // Combine events and holidays for TableCalendar markers
+          Map<DateTime, List<dynamic>> combinedMap = {};
           for (var event in events) {
-            final date = DateTime(
-              event.start?.year ?? 0,
-              event.start?.month ?? 1,
-              event.start?.day ?? 1,
-            );
-            eventMap.putIfAbsent(date, () => []).add(event);
+            if (event.start != null) {
+              final date = DateTime(
+                event.start!.year,
+                event.start!.month,
+                event.start!.day,
+              );
+              combinedMap.putIfAbsent(date, () => []).add(event);
+            }
           }
-
-          // Merge holidays into eventMap for eventLoader
-          Map<DateTime, List<dynamic>> combinedMap = {...eventMap};
           holidays.forEach((date, hols) {
             combinedMap.update(
               date,
@@ -109,10 +91,75 @@ class _CalendarLayoutState extends State<CalendarLayout> {
                     _selectedDay = selectedDay;
                     _focusedDay = focusedDay;
                   });
-                  final idx = _findEventIndexForDate(events, selectedDay);
-                  if (idx != -1) {
+
+                  // Find the index in the displayList for scrolling
+                  final selectedDate = DateTime(
+                    selectedDay.year,
+                    selectedDay.month,
+                    selectedDay.day,
+                  );
+
+                  // Build the same displayList as below to find the index
+                  final List<Map<String, dynamic>> allItems = [
+                    ...events
+                        .where((e) => e.start != null)
+                        .map(
+                          (e) => {
+                            'type': 'event',
+                            'date': DateTime(
+                              e.start!.year,
+                              e.start!.month,
+                              e.start!.day,
+                            ),
+                            'data': e,
+                          },
+                        ),
+                    ...holidays.entries.expand(
+                      (entry) => entry.value.map(
+                        (h) => {
+                          'type': 'holiday',
+                          'date': entry.key,
+                          'data': h,
+                        },
+                      ),
+                    ),
+                  ];
+
+                  final Map<String, List<Map<String, dynamic>>> monthMap = {};
+                  for (final item in allItems) {
+                    final date = item['date'] as DateTime;
+                    final monthKey =
+                        "${date.year}-${date.month.toString().padLeft(2, '0')}";
+                    monthMap.putIfAbsent(monthKey, () => []).add(item);
+                  }
+
+                  final List<dynamic> displayList = [];
+                  monthMap.forEach((monthKey, items) {
+                    if (items.isNotEmpty) {
+                      final parts = monthKey.split('-');
+                      final year = int.parse(parts[0]);
+                      final month = int.parse(parts[1]);
+                      displayList.add(DateTime(year, month, 1));
+                      items.sort(
+                        (a, b) => (a['date'] as DateTime).compareTo(
+                          b['date'] as DateTime,
+                        ),
+                      );
+                      displayList.addAll(items);
+                    }
+                  });
+
+                  final dateIdx = displayList.indexWhere(
+                    (item) =>
+                        item is Map &&
+                        (item['date'] as DateTime).year == selectedDate.year &&
+                        (item['date'] as DateTime).month ==
+                            selectedDate.month &&
+                        (item['date'] as DateTime).day == selectedDate.day,
+                  );
+                  if (dateIdx != -1) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _scrollToIndex(idx);
+                      _scrollToIndex(dateIdx);
                     });
                   }
                 },
@@ -136,10 +183,13 @@ class _CalendarLayoutState extends State<CalendarLayout> {
                         alignment: Alignment.bottomCenter,
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 4.0),
-                          child: Icon(
-                            Icons.flag,
-                            color: Colors.redAccent,
-                            size: 16,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              shape: BoxShape.circle,
+                            ),
                           ),
                         ),
                       );
@@ -148,167 +198,206 @@ class _CalendarLayoutState extends State<CalendarLayout> {
                   },
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 4),
               Expanded(
                 child: Builder(
                   builder: (context) {
-                    final allDates =
-                        <DateTime>{
-                            ...events
-                                .where((e) => e.start != null)
-                                .map(
-                                  (e) => DateTime(
-                                    e.start!.year,
-                                    e.start!.month,
-                                    e.start!.day,
-                                  ),
-                                ),
-                            ...holidays.keys,
-                          }.toList()
-                          ..sort((a, b) => a.compareTo(b));
+                    // 1. Combine events and holidays into a unified list
+                    final List<Map<String, dynamic>> allItems = [
+                      ...events
+                          .where((e) => e.start != null)
+                          .map(
+                            (e) => {
+                              'type': 'event',
+                              'date': DateTime(
+                                e.start!.year,
+                                e.start!.month,
+                                e.start!.day,
+                              ),
+                              'data': e,
+                            },
+                          ),
+                      ...holidays.entries.expand(
+                        (entry) => entry.value.map(
+                          (h) => {
+                            'type': 'holiday',
+                            'date': entry.key,
+                            'data': h,
+                          },
+                        ),
+                      ),
+                    ];
 
-                    // Map events by date for quick lookup
-                    final Map<DateTime, List<dynamic>> eventMap = {};
-                    for (var event in events) {
-                      if (event.start != null) {
-                        final date = DateTime(
-                          event.start!.year,
-                          event.start!.month,
-                          event.start!.day,
+                    // 2. Group by month
+                    final Map<String, List<Map<String, dynamic>>> monthMap = {};
+                    for (final item in allItems) {
+                      final date = item['date'] as DateTime;
+                      final monthKey =
+                          "${date.year}-${date.month.toString().padLeft(2, '0')}";
+                      monthMap.putIfAbsent(monthKey, () => []).add(item);
+                    }
+
+                    // 3. Build displayList: [monthHeader, ...itemsForMonth], sorted by month
+                    final List<dynamic> displayList = [];
+                    final sortedMonthKeys =
+                        monthMap.keys.toList()..sort((a, b) {
+                          // Parse year and month for comparison
+                          final aParts = a.split('-');
+                          final bParts = b.split('-');
+                          final aDate = DateTime(
+                            int.parse(aParts[0]),
+                            int.parse(aParts[1]),
+                          );
+                          final bDate = DateTime(
+                            int.parse(bParts[0]),
+                            int.parse(bParts[1]),
+                          );
+                          return aDate.compareTo(bDate);
+                        });
+
+                    for (final monthKey in sortedMonthKeys) {
+                      final items = monthMap[monthKey]!;
+                      if (items.isNotEmpty) {
+                        final parts = monthKey.split('-');
+                        final year = int.parse(parts[0]);
+                        final month = int.parse(parts[1]);
+                        displayList.add(
+                          DateTime(year, month, 1),
+                        ); // month header
+                        items.sort(
+                          (a, b) => (a['date'] as DateTime).compareTo(
+                            b['date'] as DateTime,
+                          ),
                         );
-                        eventMap.putIfAbsent(date, () => []).add(event);
+                        displayList.addAll(items);
                       }
                     }
 
                     return ListView.builder(
                       controller: _scrollController,
-                      itemCount: allDates.length,
+                      itemCount: displayList.length,
                       itemBuilder: (context, index) {
-                        final date = allDates[index];
-                        final items = eventMap[date] ?? [];
-                        final holidayNames = holidays[date];
+                        final item = displayList[index];
+                        if (item is DateTime && item.day == 1) {
+                          // Month header
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 16.0,
+                              horizontal: 16,
+                            ),
+                            child: Text(
+                              "${_monthLong(item.month)} ${item.year}",
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          );
+                        }
+                        // Unified event/holiday rendering
+                        final type = item['type'];
+                        final date = item['date'] as DateTime;
                         final isSelected =
                             _selectedDay != null &&
                             date.year == _selectedDay!.year &&
                             date.month == _selectedDay!.month &&
                             date.day == _selectedDay!.day;
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Date header with holiday chips if any
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8.0,
-                                horizontal: 16,
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    "${date.day.toString().padLeft(2, '0')} ${_monthShort(date.month)} ${date.year}",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          isSelected
-                                              ? Colors.black
-                                              : Colors.grey[700],
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Events for this date
-                            ...items.map((event) {
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedDay = date;
-                                    _focusedDay = date;
-                                  });
-                                },
-                                child: Container(
-                                  color:
-                                      isSelected
-                                          ? Colors.black.withOpacity(0.07)
-                                          : Colors.transparent,
-                                  child: ListTile(
-                                    leading: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          "${date.day.toString().padLeft(2, '0')}\n${_monthShort(date.month)}",
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color:
-                                                isSelected
-                                                    ? Colors.black
-                                                    : Colors.grey[700],
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    title: Text(
-                                      event.title ?? 'No Title',
+                        if (type == 'event') {
+                          final event = item['data'];
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedDay = date;
+                                _focusedDay = date;
+                              });
+                            },
+                            child: Container(
+                              color:
+                                  isSelected
+                                      ? Colors.black.withOpacity(0.07)
+                                      : Colors.transparent,
+                              child: ListTile(
+                                leading: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "${date.day.toString().padLeft(2, '0')}\n${_monthShort(date.month)}",
+                                      textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.bold,
                                         color:
                                             isSelected
                                                 ? Colors.black
-                                                : Colors.grey[900],
+                                                : Colors.grey[700],
+                                        fontSize: 16,
                                       ),
                                     ),
-                                    subtitle: Text(
-                                      "${_formatTime(event.start)} - ${_formatTime(event.end)}",
-                                    ),
+                                  ],
+                                ),
+                                title: Text(
+                                  event.title ?? 'No Title',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        isSelected
+                                            ? Colors.black
+                                            : Colors.grey[900],
                                   ),
                                 ),
-                              );
-                            }).toList(),
-                            // Holidays styled like events but light grey
-                            if (holidayNames != null)
-                              ...holidayNames.map(
-                                (h) => Container(
-                                  margin: const EdgeInsets.only(
-                                    left: 8,
-                                    right: 8,
-                                    bottom: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: ListTile(
-                                    leading: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.flag,
-                                          color: Colors.grey[500],
-                                          size: 20,
-                                        ),
-                                      ],
-                                    ),
-                                    title: Text(
-                                      h,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    subtitle: const Text(
-                                      "Holiday",
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                  ),
+                                subtitle: Text(
+                                  "${_formatTime(event.start)} - ${_formatTime(event.end)}",
                                 ),
                               ),
-                          ],
-                        );
+                            ),
+                          );
+                        } else if (type == 'holiday') {
+                          final holiday = item['data'];
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedDay = date;
+                                _focusedDay = date;
+                              });
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(
+                                left: 8,
+                                right: 8,
+                                bottom: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: ListTile(
+                                leading: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.flag,
+                                      color: Colors.grey[500],
+                                      size: 20,
+                                    ),
+                                  ],
+                                ),
+                                title: Text(
+                                  holiday,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                subtitle: const Text(
+                                  "Holiday",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
                       },
                     );
                   },
@@ -325,6 +414,24 @@ class _CalendarLayoutState extends State<CalendarLayout> {
         );
       },
     );
+  }
+
+  String _monthLong(int month) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return months[(month - 1).clamp(0, 11)];
   }
 
   String _monthShort(int month) {
@@ -347,6 +454,9 @@ class _CalendarLayoutState extends State<CalendarLayout> {
 
   String _formatTime(DateTime? dt) {
     if (dt == null) return '';
-    return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+    int hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    String minute = dt.minute.toString().padLeft(2, '0');
+    String period = dt.hour < 12 ? 'AM' : 'PM';
+    return "$hour:$minute $period";
   }
 }
