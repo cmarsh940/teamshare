@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:teamshare/constants.dart';
+import '../../constants.dart';
 
 class NotificationRepository {
   // This class will handle the logic for notifications.

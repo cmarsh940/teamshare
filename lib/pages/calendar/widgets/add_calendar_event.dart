@@ -18,6 +18,8 @@ class _AddCalendarEventPageState extends State<AddCalendarEventPage> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _locationNameController = TextEditingController();
+  final _addressController = TextEditingController();
   DateTime? _startDate;
   DateTime? _endDate;
   String userId = '';
@@ -31,6 +33,15 @@ class _AddCalendarEventPageState extends State<AddCalendarEventPage> {
 
   getUser() async {
     userId = await _userRepository.getId();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _locationNameController.dispose();
+    _addressController.dispose();
+    super.dispose();
   }
 
   @override
@@ -74,6 +85,22 @@ class _AddCalendarEventPageState extends State<AddCalendarEventPage> {
                       border: OutlineInputBorder(),
                     ),
                     maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _locationNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Location Name (optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _addressController,
+                    decoration: const InputDecoration(
+                      labelText: 'Address (optional)',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   ListTile(
@@ -157,6 +184,14 @@ class _AddCalendarEventPageState extends State<AddCalendarEventPage> {
                           end: _endDate!,
                           team: widget.teamId,
                           createdBy: userId,
+                          location:
+                              _locationNameController.text.isNotEmpty
+                                  ? _locationNameController.text
+                                  : null,
+                          address:
+                              _addressController.text.isNotEmpty
+                                  ? _addressController.text
+                                  : null,
                         );
                         context.read<CalendarBloc>().add(
                           AddCalendarEvent(

@@ -15,3 +15,15 @@ class AddCalendarEvent extends CalendarEvent {
 
   AddCalendarEvent({required this.teamId, required this.event});
 }
+
+class AcceptEvent extends CalendarEvent {
+  final String eventId;
+
+  AcceptEvent({required this.eventId});
+}
+
+class DeclineEvent extends CalendarEvent {
+  final String eventId;
+
+  DeclineEvent({required this.eventId});
+}

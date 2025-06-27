@@ -6,8 +6,9 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
-import 'package:teamshare/constants.dart';
 import 'package:teamshare/models/user.dart';
+
+import '../../constants.dart';
 
 class UserRepository {
   Future<User?> authenticate({

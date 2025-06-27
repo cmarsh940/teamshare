@@ -5,43 +5,45 @@ import 'package:teamshare/models/user.dart';
 part 'calendar.g.dart';
 
 @JsonSerializable()
-class Recurrence {
-  final String type; // 'none', 'daily', 'weekly', 'monthly', 'yearly'
-  final int interval;
-  final List<int>? daysOfWeek;
-
-  Recurrence({this.type = 'none', this.interval = 1, this.daysOfWeek});
-
-  factory Recurrence.fromJson(Map<String, dynamic> json) =>
-      _$RecurrenceFromJson(json);
-  Map<String, dynamic> toJson() => _$RecurrenceToJson(this);
-}
-
 @JsonSerializable(explicitToJson: true)
 class TeamCalendar {
   @JsonKey(name: '_id')
   final String? id;
+  final List<String>? attachments;
+  final List<String>? accepted;
+  final List<String>? declined;
   final String? team;
   final String? title;
   final String? description;
   final DateTime? start;
   final DateTime? end;
-  final Recurrence? recurrence;
   final String? createdBy;
+  final String? picture;
   final bool? notified;
+  final String? location;
+  final double? latitude;
+  final double? longitude;
+  final String? address;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   TeamCalendar({
     this.id,
+    this.attachments,
+    this.accepted,
+    this.declined,
     required this.team,
     required this.title,
     this.description,
     required this.start,
     required this.end,
-    this.recurrence,
     required this.createdBy,
+    this.picture,
     this.notified = false,
+    this.location,
+    this.latitude,
+    this.longitude,
+    this.address,
     this.createdAt,
     this.updatedAt,
   });

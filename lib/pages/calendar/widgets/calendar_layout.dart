@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:teamshare/models/holidays.dart';
 import 'package:teamshare/pages/calendar/bloc/calendar_bloc.dart';
+import 'package:teamshare/pages/calendar/widgets/event_view.dart';
 
 class CalendarLayout extends StatefulWidget {
   final String teamId;
@@ -312,6 +314,17 @@ class _CalendarLayoutState extends State<CalendarLayout> {
                                 _selectedDay = date;
                                 _focusedDay = date;
                               });
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) =>
+                                          BlocProvider<CalendarBloc>.value(
+                                            value: GetIt.I<CalendarBloc>(),
+                                            child: Placeholder(),
+                                          ),
+                                ),
+                              );
                             },
                             child: Container(
                               color:

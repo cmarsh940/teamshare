@@ -38,3 +38,15 @@ final class CalendarEventUpdated extends CalendarState {
 
   CalendarEventUpdated({required this.event});
 }
+
+final class UserAcceptedEvent extends CalendarState {
+  final String eventId;
+
+  UserAcceptedEvent({required this.eventId});
+}
+
+final class UserDeclinedEvent extends CalendarState {
+  final String eventId;
+
+  UserDeclinedEvent({required this.eventId});
+}

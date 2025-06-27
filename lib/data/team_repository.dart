@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:teamshare/constants.dart';
+import '../../constants.dart';
 import 'package:teamshare/models/calendar.dart';
 import 'package:teamshare/models/post.dart';
 import 'package:teamshare/models/team.dart';
