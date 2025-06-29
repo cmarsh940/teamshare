@@ -321,7 +321,7 @@ class _CalendarLayoutState extends State<CalendarLayout> {
                                       (context) =>
                                           BlocProvider<CalendarBloc>.value(
                                             value: GetIt.I<CalendarBloc>(),
-                                            child: Placeholder(),
+                                            child: EventView(event: event),
                                           ),
                                 ),
                               );
