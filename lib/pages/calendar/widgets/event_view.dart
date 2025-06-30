@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:teamshare/data/repositories.dart';
 import 'package:teamshare/utils/formate_event_date_time.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:teamshare/models/calendar.dart';
@@ -20,6 +21,22 @@ class EventView extends StatefulWidget {
 
 class _EventViewState extends State<EventView> {
   GoogleMapController? _mapController;
+  UserRepository get userRepository => GetIt.I<UserRepository>();
+  String? _userId;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void getUserId() async {
+    _userId = await userRepository.getId();
+    if (_userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Please log out and log back in.')),
+      );
+    }
+  }
 
   void _launchMaps() async {
     final address = widget.event.address;
@@ -51,15 +68,38 @@ class _EventViewState extends State<EventView> {
       value: GetIt.I<CalendarBloc>(),
       child: BlocListener<CalendarBloc, CalendarState>(
         listener: (context, state) {
+          // For Accept
           if (state is UserAcceptedEvent) {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(const SnackBar(content: Text('Accepted event')));
+            setState(() {
+              // Remove from declined if present
+              widget.event.declined?.remove(state.userId);
+
+              // Add to accepted if not already there
+              widget.event.accepted ??= [];
+              if (!widget.event.accepted!.contains(state.userId)) {
+                widget.event.accepted!.add(state.userId);
+              }
+            });
           }
+
+          // For Decline
           if (state is UserDeclinedEvent) {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(const SnackBar(content: Text('Declined event')));
+            setState(() {
+              // Remove from accepted if present
+              widget.event.accepted?.remove(state.userId);
+
+              // Add to declined if not already there
+              widget.event.declined ??= [];
+              if (!widget.event.declined!.contains(state.userId)) {
+                widget.event.declined!.add(state.userId);
+              }
+            });
           }
         },
         child: Scaffold(
@@ -158,6 +198,18 @@ class _EventViewState extends State<EventView> {
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () {
+                            if (_userId == null) return;
+                            if (widget.event.declined?.contains(_userId) ==
+                                true) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'You have already declined this event.',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
                             context.read<CalendarBloc>().add(
                               DeclineEvent(eventId: widget.event.id!),
                             );
@@ -210,6 +262,22 @@ class _EventViewState extends State<EventView> {
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () {
+                            if (_userId == null) {
+                              print('User ID is null, cannot accept event');
+                              return;
+                            }
+                            ;
+                            if (widget.event.accepted?.contains(_userId) ==
+                                true) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'You have already accepted this event.',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
                             context.read<CalendarBloc>().add(
                               AcceptEvent(eventId: widget.event.id!),
                             );

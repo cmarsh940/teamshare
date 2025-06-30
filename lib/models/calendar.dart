@@ -9,21 +9,21 @@ part 'calendar.g.dart';
 class TeamCalendar {
   @JsonKey(name: '_id')
   final String? id;
-  final List<String>? attachments;
-  final List<String>? accepted;
-  final List<String>? declined;
-  final String? team;
-  final String? title;
-  final String? description;
-  final DateTime? start;
-  final DateTime? end;
-  final String? createdBy;
-  final String? picture;
-  final bool? notified;
-  final String? location;
-  final double? latitude;
-  final double? longitude;
-  final String? address;
+  List<String>? attachments;
+  List<String>? accepted;
+  List<String>? declined;
+  String? team;
+  String? title;
+  String? description;
+  DateTime? start;
+  DateTime? end;
+  String? createdBy;
+  String? picture;
+  bool? notified;
+  String? location;
+  double? latitude;
+  double? longitude;
+  String? address;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 

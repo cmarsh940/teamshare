@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:teamshare/data/user_repository.dart';
 import '../../constants.dart';
 import 'package:teamshare/models/calendar.dart';
 import 'package:teamshare/models/post.dart';
@@ -8,6 +10,8 @@ import 'package:teamshare/models/team.dart';
 import 'package:teamshare/models/user.dart';
 
 class TeamRepository {
+  UserRepository userRepository = GetIt.instance<UserRepository>();
+
   // Example method to fetch teams
   Future<List<dynamic>> fetchTeams(dynamic id) async {
     http.Response response = await http.get(Uri.parse(fetchTeamUrl(id)));
@@ -123,6 +127,36 @@ class TeamRepository {
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to add calendar event');
+    }
+  }
+
+  Future<String> acceptTeamCalendarEvent(String eventId) async {
+    final userId = await userRepository.getId();
+    var url = acceptTeamCalendarEventUrl(eventId, userId);
+    var response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'eventId': eventId, 'userId': userId}),
+    );
+    if (response.statusCode == 200) {
+      return userId;
+    } else {
+      throw Exception('Failed to accept calendar event');
+    }
+  }
+
+  Future<String> declineTeamCalendarEvent(String eventId) async {
+    final userId = await userRepository.getId();
+    var url = declineTeamCalendarEventUrl(eventId, userId);
+    var response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'eventId': eventId, 'userId': userId}),
+    );
+    if (response.statusCode == 200) {
+      return userId;
+    } else {
+      throw Exception('Failed to accept calendar event');
     }
   }
 }

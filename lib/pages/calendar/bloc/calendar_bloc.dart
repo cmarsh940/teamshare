@@ -15,6 +15,8 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
   CalendarBloc(this.teamRepository) : super(CalendarInitial()) {
     on<LoadCalendar>(_mapLoadCalendarToState);
     on<AddCalendarEvent>(_mapAddCalendarEventToState);
+    on<AcceptEvent>(_mapAcceptEventToState);
+    on<DeclineEvent>(_mapDeclineEventToState);
   }
 
   _mapLoadCalendarToState(
@@ -40,6 +42,31 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
       emit(CalendarEventAdded());
     } catch (e) {
       emit(CalendarError(message: 'Failed to add calendar event'));
+    }
+  }
+
+  _mapAcceptEventToState(AcceptEvent event, Emitter<CalendarState> emit) async {
+    try {
+      var response = await teamRepository.acceptTeamCalendarEvent(
+        event.eventId,
+      );
+      emit(UserAcceptedEvent(userId: response));
+    } catch (e) {
+      emit(CalendarError(message: 'Failed to accept calendar event'));
+    }
+  }
+
+  _mapDeclineEventToState(
+    DeclineEvent event,
+    Emitter<CalendarState> emit,
+  ) async {
+    try {
+      var response = await teamRepository.declineTeamCalendarEvent(
+        event.eventId,
+      );
+      emit(UserDeclinedEvent(userId: response));
+    } catch (e) {
+      emit(CalendarError(message: 'Failed to accept calendar event'));
     }
   }
 }
