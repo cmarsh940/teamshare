@@ -1,6 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:teamshare/models/comment.dart';
-import 'package:teamshare/models/team.dart';
 import 'package:teamshare/models/user.dart';
 
 part 'post.g.dart';
@@ -9,11 +8,13 @@ part 'post.g.dart';
 class Post {
   @JsonKey(name: '_id')
   String? id;
-  List<String>? attatchments;
+  List<String>? attachments;
   User? author;
   String? body;
   List<Comment>? comments;
-  Team? team;
+  List<String>? likes;
+  List<String>? dislikes;
+  String? teamId;
   String? title;
   String? createdAt;
   String? updatedAt;
@@ -22,11 +23,13 @@ class Post {
 
   Post(
     this.id,
-    this.attatchments,
+    this.attachments,
     this.author,
     this.body,
     this.comments,
-    this.team,
+    this.likes,
+    this.dislikes,
+    this.teamId,
     this.title,
     this.createdAt,
     this.updatedAt,

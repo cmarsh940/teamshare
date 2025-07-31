@@ -12,6 +12,7 @@ import 'package:teamshare/pages/calendar/bloc/calendar_bloc.dart';
 import 'package:teamshare/pages/firstTime/first_time_page.dart';
 import 'package:teamshare/pages/home.dart';
 import 'package:teamshare/pages/login/login_page.dart';
+import 'package:teamshare/pages/post/bloc/post_bloc.dart';
 import 'package:teamshare/pages/profile/profile_page.dart';
 import 'package:teamshare/pages/team/bloc/team_bloc.dart';
 import 'package:teamshare/pages/team/team_page.dart';
@@ -39,6 +40,11 @@ void main() async {
   final calendarBloc = CalendarBloc(GetIt.I<TeamRepository>());
   if (!GetIt.I.isRegistered<CalendarBloc>()) {
     GetIt.I.registerSingleton<CalendarBloc>(calendarBloc);
+  }
+
+  final postBloc = PostBloc();
+  if (!GetIt.I.isRegistered<PostBloc>()) {
+    GetIt.I.registerSingleton<PostBloc>(postBloc);
   }
 
   final notificationRepository = NotificationRepository();

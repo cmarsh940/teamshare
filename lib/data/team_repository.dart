@@ -159,4 +159,29 @@ class TeamRepository {
       throw Exception('Failed to accept calendar event');
     }
   }
+
+  Future<void> addPost(Post post, String teamId) async {
+    final userId = await userRepository.getId();
+    var url = addTeamPostUrl(teamId);
+    var response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({...post.toJson(), 'userId': userId}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to add post');
+    }
+  }
+
+  Future<void> likePost(String postId, String userId) async {
+    var url = likePostUrl(postId, userId);
+    var response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'postId': postId, 'userId': userId}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to like post');
+    }
+  }
 }
