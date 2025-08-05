@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:teamshare/auth/auth_bloc.dart';
+import 'package:teamshare/data/message_repository.dart';
 import 'package:teamshare/data/notification_repository.dart';
 import 'package:teamshare/data/repositories.dart';
 import 'package:teamshare/data/team_repository.dart';
@@ -12,6 +13,7 @@ import 'package:teamshare/pages/calendar/bloc/calendar_bloc.dart';
 import 'package:teamshare/pages/firstTime/first_time_page.dart';
 import 'package:teamshare/pages/home.dart';
 import 'package:teamshare/pages/login/login_page.dart';
+import 'package:teamshare/pages/message/bloc/message_bloc.dart';
 import 'package:teamshare/pages/post/bloc/post_bloc.dart';
 import 'package:teamshare/pages/profile/profile_page.dart';
 import 'package:teamshare/pages/team/bloc/team_bloc.dart';
@@ -32,6 +34,11 @@ void main() async {
     GetIt.I.registerSingleton<TeamRepository>(teamRepository);
   }
 
+  final MessageRepository messageRepository = MessageRepository();
+  if (!GetIt.I.isRegistered<MessageRepository>()) {
+    GetIt.I.registerSingleton<MessageRepository>(messageRepository);
+  }
+
   final teamBloc = TeamBloc(GetIt.I<TeamRepository>());
   if (!GetIt.I.isRegistered<TeamBloc>()) {
     GetIt.I.registerSingleton<TeamBloc>(teamBloc);
@@ -40,6 +47,11 @@ void main() async {
   final calendarBloc = CalendarBloc(GetIt.I<TeamRepository>());
   if (!GetIt.I.isRegistered<CalendarBloc>()) {
     GetIt.I.registerSingleton<CalendarBloc>(calendarBloc);
+  }
+
+  final messageBloc = MessageBloc();
+  if (!GetIt.I.isRegistered<MessageBloc>()) {
+    GetIt.I.registerSingleton<MessageBloc>(messageBloc);
   }
 
   final postBloc = PostBloc();

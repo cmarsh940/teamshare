@@ -13,6 +13,8 @@ final class MessageLoaded extends MessageState {
   MessageLoaded(this.messages);
 }
 
+final class MessageEmpty extends MessageState {}
+
 final class ErrorLoadingMessages extends MessageState {
   final String error;
 
@@ -20,3 +22,5 @@ final class ErrorLoadingMessages extends MessageState {
 }
 
 final class MessagesEmpty extends MessageState {}
+
+final class MessageSent extends MessageState {}

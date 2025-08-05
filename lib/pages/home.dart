@@ -32,13 +32,15 @@ class _HomePageState extends State<HomePage>
   int _selectedIndex = 0;
   List<Widget> _widgetOptions = <Widget>[];
   SharedPreferences prefs = GetIt.I<SharedPreferences>();
+  String userId = '';
 
   @override
   void initState() {
     super.initState();
+    _initUserId();
     _widgetOptions.add(DashboardPage());
     _widgetOptions.add(NotificationPage());
-    _widgetOptions.add(MessagePage());
+    _widgetOptions.add(MessagePage(isTeamMessages: false, userId: userId));
     _widgetOptions.add(SettingPage());
   }
 
@@ -50,6 +52,10 @@ class _HomePageState extends State<HomePage>
   @override
   void dispose() {
     super.dispose();
+  }
+
+  Future<void> _initUserId() async {
+    userId = await userRepository.getId();
   }
 
   void _onItemTapped(int index) {

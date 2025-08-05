@@ -3,9 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:teamshare/pages/message/bloc/message_bloc.dart';
 
 class MessageList extends StatefulWidget {
+  final String userId;
   final String? teamId;
+  final bool isTeamMessages;
 
-  const MessageList({super.key, this.teamId});
+  const MessageList({
+    super.key,
+    required this.userId,
+    this.teamId,
+    required this.isTeamMessages,
+  });
 
   @override
   State<MessageList> createState() => _MessageListState();
@@ -25,7 +32,9 @@ class _MessageListState extends State<MessageList> {
     return BlocBuilder<MessageBloc, MessageState>(
       builder: (context, state) {
         if (state is MessageInitial) {
-          _messageBloc.add(LoadMessages(widget.teamId));
+          _messageBloc.add(
+            LoadMessages(widget.teamId, widget.isTeamMessages, widget.userId),
+          );
         }
         if (state is LoadingMessages) {
           return const Center(child: CircularProgressIndicator());

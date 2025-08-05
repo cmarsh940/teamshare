@@ -8,8 +8,9 @@ import 'package:teamshare/pages/post/bloc/post_bloc.dart';
 
 class PostList extends StatefulWidget {
   final String teamId;
+  final String userId;
 
-  const PostList({super.key, required this.teamId});
+  const PostList({super.key, required this.teamId, required this.userId});
 
   @override
   State<PostList> createState() => _PostListState();
@@ -17,19 +18,13 @@ class PostList extends StatefulWidget {
 
 class _PostListState extends State<PostList> {
   late PostBloc _postBloc;
-  String userId = '';
-  UserRepository userRepository = GetIt.instance<UserRepository>();
+  late final String userId;
 
   @override
   void initState() {
+    userId = widget.userId;
     super.initState();
     _postBloc = GetIt.I<PostBloc>();
-    _initUserId();
-  }
-
-  Future<void> _initUserId() async {
-    userId = await userRepository.getId();
-    setState(() {}); // To trigger rebuild when userId is loaded
   }
 
   String timeAgo(DateTime date) {

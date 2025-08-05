@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:teamshare/auth/auth_bloc.dart';
 import 'package:teamshare/data/team_repository.dart';
+import 'package:teamshare/data/user_repository.dart';
 import 'package:teamshare/pages/calendar/calendar_page.dart';
 import 'package:teamshare/pages/member/member_page.dart';
 import 'package:teamshare/pages/message/message_page.dart';
@@ -22,17 +23,23 @@ class _TeamPageState extends State<TeamPage> {
   int _selectedIndex = 0;
   List<Widget> _widgetOptions = <Widget>[];
   final TeamRepository teamRepository = GetIt.I<TeamRepository>();
+  String userId = '';
+  UserRepository userRepository = GetIt.instance<UserRepository>();
 
   @override
   void initState() {
     print('Team id is : ${widget.teamId}');
-    _widgetOptions.add(PostPage(teamId: widget.teamId));
-    _widgetOptions.add(MessagePage(teamId: widget.teamId));
+    _widgetOptions.add(PostPage(teamId: widget.teamId, userId: userId));
+    _widgetOptions.add(
+      MessagePage(teamId: widget.teamId, userId: userId, isTeamMessages: true),
+    );
     _widgetOptions.add(PhotoGalleryPage(teamId: widget.teamId));
     _widgetOptions.add(
       CalendarPage(teamId: widget.teamId, teamRepository: teamRepository),
     );
     _widgetOptions.add(MemberPage(teamId: widget.teamId));
+
+    _initUserId();
 
     super.initState();
   }
@@ -40,6 +47,10 @@ class _TeamPageState extends State<TeamPage> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  Future<void> _initUserId() async {
+    userId = await userRepository.getId();
   }
 
   void _onItemTapped(int index) {
