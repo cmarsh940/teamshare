@@ -42,3 +42,36 @@ final class PostUnliked extends PostState {
 
   PostUnliked(this.postId, this.userId, this.posts);
 }
+
+final class CommentsLoaded extends PostState {
+  final String postId;
+  final List<Comment> comments;
+  final List<Post> posts; // <-- add this
+
+  CommentsLoaded(this.postId, this.comments, this.posts);
+}
+
+final class CommentAdded extends PostState {
+  final String postId;
+  final Comment comment;
+  final List<Post> posts;
+  final List<Comment> comments;
+
+  CommentAdded(this.postId, this.comment, this.posts, this.comments);
+}
+
+class CommentLiked extends PostState {
+  final String postId;
+  final List<Comment> comments;
+  final List<Post> posts;
+
+  CommentLiked(this.postId, this.comments, this.posts);
+}
+
+class CommentUnliked extends PostState {
+  final String postId;
+  final List<Comment> comments;
+  final List<Post> posts;
+
+  CommentUnliked(this.postId, this.comments, this.posts);
+}

@@ -7,28 +7,18 @@ import 'package:teamshare/pages/post/widgets/post_list.dart';
 
 class PostPage extends StatelessWidget {
   final String teamId;
-
   const PostPage({super.key, required this.teamId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: BlocProvider<PostBloc>(
-          create: (context) => PostBloc(),
-          child: PostList(teamId: teamId),
-        ),
-      ),
+      body: PostList(teamId: teamId),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) => BlocProvider<PostBloc>.value(
-                    value: GetIt.I<PostBloc>(),
-                    child: CreatePostForm(teamId: teamId),
-                  ),
+              builder: (context) => CreatePostForm(teamId: teamId),
             ),
           );
         },

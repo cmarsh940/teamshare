@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meta/meta.dart';
 import 'package:teamshare/data/team_repository.dart';
+import 'package:teamshare/models/comment.dart';
 import 'package:teamshare/models/post.dart';
 
 part 'post_event.dart';
@@ -18,6 +19,10 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     on<AddPost>(_mapAddPostToState);
     on<LikePost>(_mapLikePostToState);
     on<UnlikePost>(_mapUnlikePostToState);
+    on<LoadComments>(_mapLoadCommentsToState);
+    on<AddComment>(_mapAddCommentToState);
+    on<LikeComment>(_mapLikeCommentToState);
+    on<UnlikeComment>(_mapUnlikeCommentToState);
   }
 
   _mapLoadTeamPostsToState(LoadTeamPosts event, Emitter<PostState> emit) async {
@@ -79,6 +84,183 @@ class PostBloc extends Bloc<PostEvent, PostState> {
         }
       }
       emit(PostUnliked(event.postId, event.userId, event.posts));
+    } catch (error) {
+      emit(PostError(error.toString()));
+    }
+  }
+
+  _mapLoadCommentsToState(LoadComments event, Emitter<PostState> emit) async {
+    print('Loading comments for post: ${event.postId}');
+    emit(PostLoading());
+    try {
+      final comments = await _teamRepository.getCommentsForPost(event.postId);
+      print('Loaded ${comments.length} comments for post: ${event.postId}');
+      if (comments.isEmpty) {
+        emit(PostEmpty());
+      } else {
+        emit(CommentsLoaded(event.postId, comments, event.posts));
+      }
+    } catch (error) {
+      emit(PostError(error.toString()));
+    }
+  }
+
+  _mapAddCommentToState(AddComment event, Emitter<PostState> emit) async {
+    try {
+      final updatedPost = await _teamRepository.addComment(
+        event.postId,
+        event.comment,
+        event.userId,
+      );
+
+      // Update the posts list with the new post
+      final updatedPosts =
+          event.posts.map((post) {
+            if (post.id == updatedPost.id) {
+              return updatedPost;
+            }
+            return post;
+          }).toList();
+
+      // Get the updated comments list
+      final updatedComments = updatedPost.comments ?? [];
+
+      emit(
+        CommentAdded(
+          event.postId,
+          event.comment,
+          updatedPosts,
+          updatedComments,
+        ),
+      );
+    } catch (error) {
+      emit(PostError(error.toString()));
+    }
+  }
+
+  void _mapLikeCommentToState(
+    LikeComment event,
+    Emitter<PostState> emit,
+  ) async {
+    try {
+      // Get current state's comments
+      List<Comment> currentComments = [];
+      if (state is CommentsLoaded) {
+        currentComments = (state as CommentsLoaded).comments;
+      } else if (state is CommentLiked) {
+        currentComments = (state as CommentLiked).comments;
+      } else if (state is CommentUnliked) {
+        currentComments = (state as CommentUnliked).comments;
+      } else if (state is CommentAdded) {
+        currentComments = (state as CommentAdded).comments;
+      } else {
+        // fallback: try to get from the post in event.posts
+        Post? post;
+        for (final p in event.posts) {
+          if (p.id == event.postId) {
+            post = p;
+            break;
+          }
+        }
+        if (post != null && post.comments != null) {
+          currentComments = post.comments!;
+        }
+      }
+
+      final success = await _teamRepository.likeComment(
+        event.postId,
+        event.commentId,
+        event.userId,
+      );
+
+      if (success) {
+        // Locally update likedBy for the comment
+        final updatedComments =
+            currentComments.map((comment) {
+              if (comment.id == event.commentId) {
+                final likedBy = List<String>.from(comment.likedBy ?? []);
+                if (!likedBy.contains(event.userId)) {
+                  likedBy.add(event.userId);
+                }
+                return comment.copyWith(likedBy: likedBy);
+              }
+              return comment;
+            }).toList();
+
+        // Update the post in our posts list
+        final updatedPosts =
+            event.posts.map((post) {
+              if (post.id == event.postId) {
+                return post.copyWith(comments: updatedComments);
+              }
+              return post;
+            }).toList();
+
+        emit(CommentsLoaded(event.postId, updatedComments, updatedPosts));
+      }
+    } catch (error) {
+      emit(PostError(error.toString()));
+    }
+  }
+
+  void _mapUnlikeCommentToState(
+    UnlikeComment event,
+    Emitter<PostState> emit,
+  ) async {
+    try {
+      // Get current state's comments
+      List<Comment> currentComments = [];
+      if (state is CommentsLoaded) {
+        currentComments = (state as CommentsLoaded).comments;
+      } else if (state is CommentLiked) {
+        currentComments = (state as CommentLiked).comments;
+      } else if (state is CommentUnliked) {
+        currentComments = (state as CommentUnliked).comments;
+      } else if (state is CommentAdded) {
+        currentComments = (state as CommentAdded).comments;
+      } else {
+        // fallback: try to get from the post in event.posts
+        Post? post;
+        for (final p in event.posts) {
+          if (p.id == event.postId) {
+            post = p;
+            break;
+          }
+        }
+        if (post != null && post.comments != null) {
+          currentComments = post.comments!;
+        }
+      }
+
+      final success = await _teamRepository.likeComment(
+        event.postId,
+        event.commentId,
+        event.userId,
+      );
+
+      if (success) {
+        // Locally update likedBy for the comment
+        final updatedComments =
+            currentComments.map((comment) {
+              if (comment.id == event.commentId) {
+                final likedBy = List<String>.from(comment.likedBy ?? []);
+                likedBy.remove(event.userId);
+                return comment.copyWith(likedBy: likedBy);
+              }
+              return comment;
+            }).toList();
+
+        // Update the post in our posts list
+        final updatedPosts =
+            event.posts.map((post) {
+              if (post.id == event.postId) {
+                return post.copyWith(comments: updatedComments);
+              }
+              return post;
+            }).toList();
+
+        emit(CommentsLoaded(event.postId, updatedComments, updatedPosts));
+      }
     } catch (error) {
       emit(PostError(error.toString()));
     }

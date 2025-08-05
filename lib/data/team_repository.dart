@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:teamshare/data/user_repository.dart';
+import 'package:teamshare/models/comment.dart';
 import '../../constants.dart';
 import 'package:teamshare/models/calendar.dart';
 import 'package:teamshare/models/post.dart';
@@ -182,6 +183,61 @@ class TeamRepository {
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to like post');
+    }
+  }
+
+  Future<List<Comment>> getCommentsForPost(String postId) async {
+    var url = getCommentsUrl(postId);
+    var response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      var jsonResponse = jsonDecode(response.body);
+      return (jsonResponse as List)
+          .map((comment) => Comment.fromJson(comment))
+          .toList();
+    } else {
+      throw Exception('Failed to load comments');
+    }
+  }
+
+  Future<Post> addComment(String postId, Comment comment, String userId) async {
+    var url = addCommentUrl(postId);
+    var response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({...comment.toJson(), 'userId': userId}),
+    );
+
+    if (response.statusCode != 200) {
+      print('Failed to add comment: ${response.body}');
+      throw Exception('Failed to add comment');
+    }
+
+    var jsonResponse = jsonDecode(response.body);
+    var postData = jsonResponse['post'] as Map<String, dynamic>;
+    return Post.fromJson(postData);
+  }
+
+  Future<bool> likeComment(
+    String postId,
+    String commentId,
+    String userId,
+  ) async {
+    var url = likeCommentUrl(postId, commentId, userId);
+    try {
+      var response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'postId': postId,
+          'commentId': commentId,
+          'userId': userId,
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error liking comment: $e');
+      return false;
     }
   }
 }

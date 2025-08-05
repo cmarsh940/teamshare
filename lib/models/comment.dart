@@ -1,18 +1,56 @@
+import 'package:json_annotation/json_annotation.dart';
+import 'package:teamshare/models/user.dart';
+
+part 'comment.g.dart';
+
+@JsonSerializable(explicitToJson: true)
 class Comment {
-  String? message;
-  String? channel;
-  
+  @JsonKey(name: '_id')
+  String? id;
+  String? body;
+  User? author;
+  List<String>? likedBy;
+  String? postId;
+  String? createdAt;
+  String? updatedAt;
+  @JsonKey(name: '__v')
+  int? v;
 
-  Comment({this.message, this.channel});
+  Comment(
+    this.id,
+    this.body,
+    this.author,
+    this.likedBy,
+    this.postId,
+    this.createdAt,
+    this.updatedAt,
+    this.v,
+  );
 
-  factory Comment.fromJson(Map<String, dynamic> json) => new Comment(
-      message: json['message'],
-      channel: json['channel'],
-      
+  Comment copyWith({
+    String? id,
+    String? body,
+    User? author,
+    List<String>? likedBy,
+    String? postId,
+    String? createdAt,
+    String? updatedAt,
+    int? v,
+  }) {
+    return Comment(
+      id ?? this.id,
+      body ?? this.body,
+      author ?? this.author,
+      likedBy ?? this.likedBy,
+      postId ?? this.postId,
+      createdAt ?? this.createdAt,
+      updatedAt ?? this.updatedAt,
+      v ?? this.v,
     );
+  }
 
-  Map<String, dynamic> toJson() => {
-        'message': message,
-        'channel': channel,
-      };
+  factory Comment.fromJson(Map<String, dynamic> json) =>
+      _$CommentFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CommentToJson(this);
 }

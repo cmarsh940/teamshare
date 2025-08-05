@@ -32,3 +32,37 @@ class UnlikePost extends PostEvent {
 
   UnlikePost(this.postId, this.userId, this.posts);
 }
+
+class LoadComments extends PostEvent {
+  final String postId;
+  final List<Post> posts;
+
+  LoadComments(this.postId, this.posts);
+}
+
+class AddComment extends PostEvent {
+  final String postId;
+  final Comment comment;
+  final String userId;
+  final List<Post> posts;
+
+  AddComment(this.postId, this.comment, this.userId, this.posts);
+}
+
+class LikeComment extends PostEvent {
+  final String postId;
+  final String commentId;
+  final String userId;
+  final List<Post> posts;
+
+  LikeComment(this.postId, this.commentId, this.userId, this.posts);
+}
+
+class UnlikeComment extends PostEvent {
+  final String postId;
+  final String commentId;
+  final String userId;
+  final List<Post> posts;
+
+  UnlikeComment(this.postId, this.commentId, this.userId, this.posts);
+}
