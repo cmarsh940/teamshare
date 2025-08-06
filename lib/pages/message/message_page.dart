@@ -38,7 +38,9 @@ class MessagePage extends StatelessWidget {
               builder:
                   (context) => BlocProvider<MessageBloc>.value(
                     value: GetIt.I<MessageBloc>(),
-                    child: AddMessageWidget(),
+                    child: AddMessageWidget(
+                      recipientId: isTeamMessages ? teamId! : userId,
+                    ),
                   ),
             ),
           );

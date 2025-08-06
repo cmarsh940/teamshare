@@ -7,6 +7,7 @@ import 'package:meta/meta.dart';
 import 'package:teamshare/data/team_repository.dart';
 import 'package:teamshare/models/comment.dart';
 import 'package:teamshare/models/post.dart';
+import '../../../utils/app_logger.dart';
 
 part 'post_event.dart';
 part 'post_state.dart';
@@ -26,11 +27,11 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   _mapLoadTeamPostsToState(LoadTeamPosts event, Emitter<PostState> emit) async {
-    print('Loading posts for team: ${event.teamId}');
+    AppLogger.info('Loading posts for team: ${event.teamId}');
     emit(PostLoading());
     try {
       final posts = await _teamRepository.getTeamPosts(event.teamId);
-      print('Loaded ${posts.length} posts for team: ${event.teamId}');
+      AppLogger.info('Loaded ${posts.length} posts for team: ${event.teamId}');
       if (posts.isEmpty) {
         emit(PostEmpty());
       } else {
@@ -42,7 +43,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   _mapAddPostToState(AddPost event, Emitter<PostState> emit) async {
-    print('Adding post: ${event.post.title}');
+    AppLogger.info('Adding post: ${event.post.title}');
     try {
       await _teamRepository.addPost(event.post, event.teamId);
       emit(PostAdded(event.post));
@@ -52,7 +53,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   _mapLikePostToState(LikePost event, Emitter<PostState> emit) async {
-    print('Liking post: ${event.postId} by user: ${event.userId}');
+    AppLogger.info('Liking post: ${event.postId} by user: ${event.userId}');
     try {
       await _teamRepository.likePost(event.postId, event.userId);
 
@@ -72,7 +73,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   _mapUnlikePostToState(UnlikePost event, Emitter<PostState> emit) async {
-    print('Unliking post: ${event.postId} by user: ${event.userId}');
+    AppLogger.info('Unliking post: ${event.postId} by user: ${event.userId}');
     try {
       await _teamRepository.likePost(event.postId, event.userId);
 
@@ -90,11 +91,15 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   _mapLoadCommentsToState(LoadComments event, Emitter<PostState> emit) async {
-    print('Loading comments for post: ${event.postId}');
+    AppLogger.info('Loading comments for post: ${event.postId}');
     emit(PostLoading());
     try {
-      final comments = await _teamRepository.getCommentsForPost(event.postId);
-      print('Loaded ${comments.length} comments for post: ${event.postId}');
+      List<Comment> comments = await _teamRepository.getCommentsForPost(
+        event.postId,
+      );
+      AppLogger.info(
+        'Loaded ${comments.length} comments for post: ${event.postId}',
+      );
       if (comments.isEmpty) {
         emit(PostEmpty());
       } else {

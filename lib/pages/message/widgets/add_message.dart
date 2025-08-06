@@ -4,7 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:teamshare/pages/message/bloc/message_bloc.dart';
 
 class AddMessageWidget extends StatefulWidget {
-  const AddMessageWidget({super.key});
+  final String recipientId;
+  final String? teamId;
+
+  const AddMessageWidget({super.key, required this.recipientId, this.teamId});
 
   @override
   State<AddMessageWidget> createState() => _AddMessageWidgetState();
@@ -112,7 +115,11 @@ class _AddMessageWidgetState extends State<AddMessageWidget> {
                           final message = _controller.text.trim();
                           if (message.isNotEmpty) {
                             context.read<MessageBloc>().add(
-                              SendMessage(message),
+                              SendMessage(
+                                message,
+                                widget.recipientId,
+                                teamId: widget.teamId,
+                              ),
                             );
                           }
                         },

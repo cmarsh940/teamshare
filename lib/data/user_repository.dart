@@ -4,347 +4,270 @@ import 'dart:io';
 
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'package:path/path.dart';
 import 'package:teamshare/models/user.dart';
+import 'package:teamshare/utils/app_logger.dart';
+import 'package:teamshare/utils/secure_http_client.dart';
+import 'package:teamshare/utils/secure_storage.dart';
 
 import '../../constants.dart';
 
 class UserRepository {
+  static const String _userTokenKey = 'user_token';
+  static const String _userIdKey = 'user_id';
+  static const String _isLoginKey = 'is_login';
+  static const String _firstTimeKey = 'first_time';
+  static const String _themeKey = 'theme';
+
   Future<User?> authenticate({
     required String email,
     required String password,
   }) async {
-    var response = await http.post(
-      Uri.parse(loginUrl),
-      body: {'email': email, 'password': password},
-    );
-    if (response.statusCode == 200) {
-      print('response : ${response.body}');
-      Map<String, dynamic> userMap = jsonDecode(response.body);
-      final User user = new User.fromJson(userMap);
-      print('user: ${user.email}');
-      if (user.id == null) {
-        print('User ID IS NULL');
-        return null;
-      } else {
-        final token = 'test';
-        final id = user.id;
-        final firstTime = false;
-
-        SharedPreferences.getInstance().then((prefs) {
-          prefs.setString("user_token", token!);
-          prefs.setString("user_id", id!);
-          prefs.setBool("is_login", true);
-          prefs.setBool("first_time", firstTime!);
-          prefs.setBool("asked_for_permissions", false);
-          prefs.setString("theme", "light");
-        });
-        return user;
-      }
-    } else {
-      return null;
-    }
-  }
-
-  Future finishSetup(User user) async {
-    SharedPreferences prefs = GetIt.I<SharedPreferences>();
-    String _token = prefs.getString("user_token")!;
-    var id = user.id;
-    if (id == null) {
-      return null;
-    } else {
-      var url = finishSetupUrl + '$id';
-      var _body = json.encode(user.toJson());
-      final http.Response response = await http.put(
-        Uri.parse(url),
-        body: _body,
-        headers: {
-          'Content-Type': 'application/json',
-          HttpHeaders.authorizationHeader: "Bearer $_token",
-        },
+    try {
+      final response = await SecureHttpClient.post(
+        Uri.parse(loginUrl),
+        body: {'email': email, 'password': password},
       );
+
       if (response.statusCode == 200) {
-        Map<String, dynamic> userMap = jsonDecode(response.body);
-        final User _user = new User.fromJson(userMap);
-        if (_user.id == null) {
-          print('User ID IS NULL');
+        AppLogger.network('Login response received: ${response.statusCode}');
+        final Map<String, dynamic> userMap = jsonDecode(response.body);
+        final User user = User.fromJson(userMap);
+        AppLogger.auth('User authenticated: ${user.email}');
+
+        if (user.id == null) {
+          AppLogger.warning('User ID is null in authentication response');
           return null;
         } else {
-          final firstTime = _user.firstTime;
-          SharedPreferences.getInstance().then((prefs) {
-            prefs.setBool("first_time", firstTime!);
-            prefs.setBool("is_login", true);
-            prefs.setBool("asked_for_permissions", false);
-            prefs.setString("theme", "light");
-          });
-          return _user;
+          final token = user.token ?? 'test'; // Use actual token from response
+          final id = user.id!;
+          const firstTime = false;
+
+          // Store sensitive data securely
+          await SecureStorage.setString(_userTokenKey, token);
+          await SecureStorage.setString(_userIdKey, id);
+          await SecureStorage.setBool(_isLoginKey, true);
+          await SecureStorage.setBool(_firstTimeKey, firstTime);
+          await SecureStorage.setBool('asked_for_permissions', false);
+          await SecureStorage.setString(_themeKey, 'light');
+
+          return user;
         }
+      } else {
+        AppLogger.warning(
+          'Authentication failed with status: ${response.statusCode}',
+        );
+        return null;
       }
+    } catch (e) {
+      AppLogger.error('Authentication error', error: e);
+      return null;
     }
   }
 
-  Future appleAuthenticate({
-    required String email,
-    required String password,
-    required String firstName,
-    required String lastName,
-  }) async {
-    // print('email $email');
-    // print('password $password');
-    // print('firstName $firstName');
-    // print('lastName $lastName');
-    // var response = await http.post(appleLoginURL, body: {'email': email, 'password': password, 'firstName': firstName, 'lastName': lastName});
-    // if (response.statusCode == 200) {
-    //   Map userMap = jsonDecode(response.body);
-    //   final UserModel _user = new UserModel.fromJson(userMap);
-    //   if (_user.id == null) {
-    //     print('user ID IS NULL');
-    //     return null;
-    //   } else {
-    //     final _token = _user.token;
-    //     final _id = _user.id;
-    //     final _count = _user.surveyCount;
-    //     final _subscription = _user.subscription;
+  Future<User?> finishSetup(User user) async {
+    try {
+      final token = await SecureStorage.getString(_userTokenKey);
+      final id = user.id;
 
-    //     SharedPreferences.getInstance().then((prefs) {
-    //       prefs.setString("user_token", _token);
-    //       prefs.setString("user_id", _id);
-    //       prefs.setBool("is_login", true);
-    //       prefs.setInt("_count", _count);
-    //       prefs.setString("_subscription", _subscription);
-    //     });
-    //     return _user;
-    //   }
-    // } else {
-    //   return null;
-    // }
-  }
+      if (id == null || token == null) {
+        AppLogger.warning('Missing user ID or token for finish setup');
+        return null;
+      }
 
-  Future googleAuthenticate({
-    required String email,
-    required String password,
-    required String firstName,
-    required String lastName,
-  }) async {
-    // var response = await http.post(googleLoginURL, body: {'email': email, 'password': password, 'firstName': firstName, 'lastName': lastName});
-    // if (response.statusCode == 200) {
-    //   Map userMap = jsonDecode(response.body);
-    //   final UserModel _user = new UserModel.fromJson(userMap);
-    //   // userModel _user = userModel.fromJson(json.decode(response.body));
-    //   if (_user.id == null) {
-    //     print('user ID IS NULL');
-    //     return null;
-    //   } else {
-    //     final _token = _user.token;
-    //     final _id = _user.id;
-    //     final _count = _user.surveyCount;
-    //     final _subscription = _user.subscription;
+      final url = '${finishSetupUrl}$id';
+      final body = json.encode(user.toJson());
 
-    //     SharedPreferences.getInstance().then((prefs) {
-    //       prefs.setString("user_token", _token);
-    //       prefs.setString("user_id", _id);
-    //       prefs.setBool("is_login", true);
-    //       prefs.setInt("_count", _count);
-    //       prefs.setString("_subscription", _subscription);
-    //     });
-    //     return _user;
-    //   }
-    // } else {
-    //   return null;
-    // }
-  }
+      final response = await SecureHttpClient.put(
+        Uri.parse(url),
+        body: body,
+        headers: {
+          'Content-Type': 'application/json',
+          HttpHeaders.authorizationHeader: "Bearer $token",
+        },
+      );
 
-  Future facebookAuthenticate({
-    required String email,
-    required String password,
-    required String firstName,
-    required String lastName,
-  }) async {
-    // var response = await http.post(facebookLoginURL, body: {'email': email, 'password': password, 'firstName': firstName, 'lastName': lastName});
-    // if (response.statusCode == 200) {
-    //   Map userMap = jsonDecode(response.body);
-    //   final UserModel _user = new UserModel.fromJson(userMap);
-    //   if (_user.id == null) {
-    //     print('user ID IS NULL');
-    //     return null;
-    //   } else {
-    //     final _token = _user.token;
-    //     final _id = _user.id;
-    //     final _count = _user.surveyCount;
-    //     final _subscription = _user.subscription;
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> userMap = jsonDecode(response.body);
+        final User updatedUser = User.fromJson(userMap);
 
-    //     SharedPreferences.getInstance().then((prefs) {
-    //       prefs.setString("user_token", _token);
-    //       prefs.setString("user_id", _id);
-    //       prefs.setBool("is_login", true);
-    //       prefs.setInt("_count", _count);
-    //       prefs.setString("_subscription", _subscription);
-    //     });
-    //     return _user;
-    //   }
-    // } else {
-    //   return null;
-    // }
+        if (updatedUser.id == null) {
+          AppLogger.warning('User ID is null in finish setup response');
+          return null;
+        } else {
+          final firstTime = updatedUser.firstTime;
+          await SecureStorage.setBool(_firstTimeKey, firstTime ?? false);
+          await SecureStorage.setBool(_isLoginKey, true);
+          await SecureStorage.setBool('asked_for_permissions', false);
+          await SecureStorage.setString(_themeKey, 'light');
+          return updatedUser;
+        }
+      }
+      return null;
+    } catch (e) {
+      AppLogger.error('Finish setup error', error: e);
+      return null;
+    }
   }
 
   Future<void> deleteToken() async {
-    SharedPreferences prefs = GetIt.I<SharedPreferences>();
-    prefs.remove("user_token");
-    return;
+    await SecureStorage.remove(_userTokenKey);
   }
 
   Future<String> getId() async {
-    SharedPreferences prefs = GetIt.I<SharedPreferences>();
-    return prefs.getString("user_id") ?? '';
+    return await SecureStorage.getString(_userIdKey) ?? '';
   }
 
   Future<bool> checkFirstTime() async {
-    SharedPreferences prefs = GetIt.I<SharedPreferences>();
-    return prefs.getBool("first_time") ?? false;
+    return await SecureStorage.getBool(_firstTimeKey) ?? false;
   }
 
-  getTheme() async {
-    SharedPreferences prefs = GetIt.I<SharedPreferences>();
-    return prefs.getString("theme");
+  Future<String?> getTheme() async {
+    return await SecureStorage.getString(_themeKey);
   }
 
   Future<void> changeTheme() async {
-    SharedPreferences prefs = GetIt.I<SharedPreferences>();
-    if (prefs.getString("theme") == "light") {
-      prefs.setString("theme", "dark");
+    final currentTheme = await getTheme();
+    if (currentTheme == 'light') {
+      await SecureStorage.setString(_themeKey, 'dark');
     } else {
-      prefs.setString("theme", "light");
+      await SecureStorage.setString(_themeKey, 'light');
     }
-    return;
   }
 
   Future<String?> getToken() async {
-    SharedPreferences prefs = GetIt.I<SharedPreferences>();
-    return prefs.getString("user_token");
+    return await SecureStorage.getString(_userTokenKey);
   }
 
   Future<bool?> isSignedIn() async {
-    SharedPreferences prefs = GetIt.I<SharedPreferences>();
-    return prefs.getBool("is_login");
+    return await SecureStorage.getBool(_isLoginKey);
   }
 
   Future<dynamic> getUser() async {
-    var _token = await getToken();
-    String id = await getId();
-    var url = Uri.parse(getUserUrl(id));
-    var response = await http.get(
-      url,
-      headers: {HttpHeaders.authorizationHeader: "Bearer $_token"},
-    );
-    if (response.statusCode == 200) {
-      return response.body;
-    } else {
+    try {
+      final token = await getToken();
+      final id = await getId();
+
+      if (token == null || id.isEmpty) {
+        AppLogger.warning('Missing token or user ID for getUser');
+        return null;
+      }
+
+      final url = Uri.parse(getUserUrl(id));
+      final response = await SecureHttpClient.get(
+        url,
+        headers: {HttpHeaders.authorizationHeader: "Bearer $token"},
+      );
+
+      if (response.statusCode == 200) {
+        return response.body;
+      } else {
+        AppLogger.warning(
+          'Get user failed with status: ${response.statusCode}',
+        );
+        return null;
+      }
+    } catch (e) {
+      AppLogger.error('Get user error', error: e);
       return null;
     }
   }
 
   Future<void> signOut() async {
-    SharedPreferences prefs = GetIt.I<SharedPreferences>();
-    prefs.clear();
-    return;
+    AppLogger.auth('Signing out user');
+    await SecureStorage.clear();
+
+    // Also clear regular SharedPreferences
+    final prefs = GetIt.I<SharedPreferences>();
+    await prefs.clear();
   }
 
-  Future signUp(
-  // ignore: non_constant_identifier_names
-  {
+  Future<User?> signUp({
     String? firstName,
     String? lastName,
     String? email,
     String? password,
     String? confirmPass,
   }) async {
-    var response = await http.post(
-      Uri.parse(registerUrl),
-      body: {
-        'firstName': firstName,
-        'lastName': lastName,
-        'email': email,
-        'password': password,
-        'confirm_pass': confirmPass,
-      },
-    );
-    if (response.statusCode == 200) {
-      Map<String, dynamic> userMap = jsonDecode(response.body);
-      final User _user = new User.fromJson(userMap);
-      if (_user.id == null) {
-        print('User ID IS NULL');
-        return null;
-      } else {
-        final _token = _user.token;
-        final _id = _user.id;
-        final _firstTime = _user.firstTime;
-        SharedPreferences.getInstance().then((prefs) {
-          prefs.setString("user_token", _token!);
-          prefs.setString("user_id", _id!);
-          prefs.setBool("is_login", true);
-          prefs.setBool("first_time", _firstTime!);
-          prefs.setString("theme", "light");
-        });
-        return _user;
-      }
-    }
-  }
-
-  Future updateUser(User user) async {
-    SharedPreferences prefs = GetIt.I<SharedPreferences>();
-
-    String _token = prefs.getString("user_token")!;
-    var id = user.id;
-    if (id == null) {
-      return null;
-    } else {
-      var url = updateUserUrl(id);
-      var _body = json.encode(user.toJson());
-      final http.Response response = await http.put(
-        Uri.parse(url),
-        body: _body,
-        headers: {
-          'Content-Type': 'application/json',
-          HttpHeaders.authorizationHeader: "Bearer $_token",
+    try {
+      final response = await SecureHttpClient.post(
+        Uri.parse(registerUrl),
+        body: {
+          'firstName': firstName,
+          'lastName': lastName,
+          'email': email,
+          'password': password,
+          'confirm_pass': confirmPass,
         },
       );
+
       if (response.statusCode == 200) {
-        var data = User.fromJson(json.decode(response.body));
-        return data;
-      } else {
-        print('Error did not return 200');
-        return null;
+        final Map<String, dynamic> userMap = jsonDecode(response.body);
+        final User user = User.fromJson(userMap);
+
+        if (user.id == null) {
+          AppLogger.warning('User ID is null in sign up response');
+          return null;
+        } else {
+          final token = user.token;
+          final id = user.id!;
+          final firstTime = user.firstTime;
+
+          if (token != null) {
+            await SecureStorage.setString(_userTokenKey, token);
+            await SecureStorage.setString(_userIdKey, id);
+            await SecureStorage.setBool(_isLoginKey, true);
+            await SecureStorage.setBool(_firstTimeKey, firstTime ?? false);
+            await SecureStorage.setString(_themeKey, 'light');
+          }
+
+          return user;
+        }
       }
+      return null;
+    } catch (e) {
+      AppLogger.error('Sign up error', error: e);
+      return null;
     }
   }
 
-  // Future uploadProfilePicture(String id, File file, String name) async {
-  //   String id = (await getId())!;
-  //   SharedPreferences pref = await SharedPreferences.getInstance();
-  //   String _token = pref.getString("user_token")!;
-  //   var url = uploadProfilePictureURL + '$id';
-  //   var filePath = basename(file.path);
-  //   var fileType = extension(filePath);
-  //   var date = DateTime.now().toIso8601String();
-  //   var newName = date + 'X' + id + fileType;
-  //   FormData formData = FormData.fromMap({
-  //     "picture": await MultipartFile.fromFile(file.path, filename: newName),
-  //   });
-  //   var response = await Dio().post(
-  //     url,
-  //     data: formData,
-  //     options: Options(
-  //       headers: {
-  //         HttpHeaders.authorizationHeader:
-  //             "Bearer $_token", // set content-length
-  //       },
-  //     ),
-  //   );
-  //   if (response.statusCode == 200) {
-  //     return response.data;
-  //   } else {
-  //     return false;
-  //   }
-  // }
+  Future<User?> updateUser(User user) async {
+    try {
+      final token = await SecureStorage.getString(_userTokenKey);
+      final id = user.id;
+
+      if (id == null || token == null) {
+        AppLogger.warning('Missing user ID or token for update user');
+        return null;
+      }
+
+      final url = updateUserUrl(id);
+      final body = json.encode(user.toJson());
+
+      final response = await SecureHttpClient.put(
+        Uri.parse(url),
+        body: body,
+        headers: {
+          'Content-Type': 'application/json',
+          HttpHeaders.authorizationHeader: "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = User.fromJson(json.decode(response.body));
+        return data;
+      } else {
+        AppLogger.warning(
+          'Update user failed with status: ${response.statusCode}',
+        );
+        return null;
+      }
+    } catch (e) {
+      AppLogger.error('Update user error', error: e);
+      return null;
+    }
+  }
+
+  // Note: Commented out social auth methods as they appear incomplete
+  // and contain only placeholder code. These should be properly implemented
+  // if social authentication is required.
 }

@@ -34,10 +34,14 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
 
   _mapSendMessageToState(SendMessage event, Emitter<MessageState> emit) async {
     try {
-      await _messageRepository.sendMessage(event.message);
+      await _messageRepository.sendMessage(
+        event.message,
+        event.recipientId,
+        teamId: event.teamId,
+      );
       emit(MessageSent());
       // Optionally, you can trigger a reload of messages after sending
-      add(LoadMessages(null, false, '')); // Adjust parameters as needed
+      add(LoadMessages(event.teamId, event.teamId != null, event.recipientId));
     } catch (error) {
       emit(ErrorLoadingMessages(error.toString()));
     }

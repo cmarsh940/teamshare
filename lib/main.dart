@@ -1,5 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,70 +20,84 @@ import 'package:teamshare/pages/team/bloc/team_bloc.dart';
 import 'package:teamshare/pages/team/team_page.dart';
 import 'package:teamshare/shared/loading_indicator.dart';
 import 'package:teamshare/shared/splash_page.dart';
+import 'package:teamshare/utils/app_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final userRepository = UserRepository();
-  if (!GetIt.I.isRegistered<UserRepository>()) {
-    GetIt.I.registerSingleton<UserRepository>(userRepository);
-  }
+  // Initialize logger
+  AppLogger.init(debugMode: kDebugMode);
 
-  final TeamRepository teamRepository = TeamRepository();
-  if (!GetIt.I.isRegistered<TeamRepository>()) {
-    GetIt.I.registerSingleton<TeamRepository>(teamRepository);
-  }
-
-  final MessageRepository messageRepository = MessageRepository();
-  if (!GetIt.I.isRegistered<MessageRepository>()) {
-    GetIt.I.registerSingleton<MessageRepository>(messageRepository);
-  }
-
-  final teamBloc = TeamBloc(GetIt.I<TeamRepository>());
-  if (!GetIt.I.isRegistered<TeamBloc>()) {
-    GetIt.I.registerSingleton<TeamBloc>(teamBloc);
-  }
-
-  final calendarBloc = CalendarBloc(GetIt.I<TeamRepository>());
-  if (!GetIt.I.isRegistered<CalendarBloc>()) {
-    GetIt.I.registerSingleton<CalendarBloc>(calendarBloc);
-  }
-
-  final messageBloc = MessageBloc();
-  if (!GetIt.I.isRegistered<MessageBloc>()) {
-    GetIt.I.registerSingleton<MessageBloc>(messageBloc);
-  }
-
-  final postBloc = PostBloc();
-  if (!GetIt.I.isRegistered<PostBloc>()) {
-    GetIt.I.registerSingleton<PostBloc>(postBloc);
-  }
-
-  final notificationRepository = NotificationRepository();
-  if (!GetIt.I.isRegistered<NotificationRepository>()) {
-    GetIt.I.registerSingleton<NotificationRepository>(notificationRepository);
-  }
-
-  final sharedPreferences = await SharedPreferences.getInstance();
-  if (!GetIt.I.isRegistered<SharedPreferences>()) {
-    GetIt.I.registerSingleton<SharedPreferences>(sharedPreferences);
-  }
+  // Initialize dependencies
+  await _initializeDependencies();
 
   runApp(
     BlocProvider<AuthBloc>(
-      // lazy: false,
       create: (context) {
-        return AuthBloc(userRepository: userRepository)..add(AppStarted());
+        return AuthBloc(userRepository: GetIt.I<UserRepository>())
+          ..add(AppStarted());
       },
-      child: App(),
+      child: const App(),
     ),
   );
 }
 
-class App extends StatelessWidget {
-  final UserRepository userRepository = GetIt.I<UserRepository>();
+Future<void> _initializeDependencies() async {
+  try {
+    final userRepository = UserRepository();
+    if (!GetIt.I.isRegistered<UserRepository>()) {
+      GetIt.I.registerSingleton<UserRepository>(userRepository);
+    }
 
-  App({super.key});
+    final teamRepository = TeamRepository();
+    if (!GetIt.I.isRegistered<TeamRepository>()) {
+      GetIt.I.registerSingleton<TeamRepository>(teamRepository);
+    }
+
+    final messageRepository = MessageRepository();
+    if (!GetIt.I.isRegistered<MessageRepository>()) {
+      GetIt.I.registerSingleton<MessageRepository>(messageRepository);
+    }
+
+    final teamBloc = TeamBloc(GetIt.I<TeamRepository>());
+    if (!GetIt.I.isRegistered<TeamBloc>()) {
+      GetIt.I.registerSingleton<TeamBloc>(teamBloc);
+    }
+
+    final calendarBloc = CalendarBloc(GetIt.I<TeamRepository>());
+    if (!GetIt.I.isRegistered<CalendarBloc>()) {
+      GetIt.I.registerSingleton<CalendarBloc>(calendarBloc);
+    }
+
+    final messageBloc = MessageBloc();
+    if (!GetIt.I.isRegistered<MessageBloc>()) {
+      GetIt.I.registerSingleton<MessageBloc>(messageBloc);
+    }
+
+    final postBloc = PostBloc();
+    if (!GetIt.I.isRegistered<PostBloc>()) {
+      GetIt.I.registerSingleton<PostBloc>(postBloc);
+    }
+
+    final notificationRepository = NotificationRepository();
+    if (!GetIt.I.isRegistered<NotificationRepository>()) {
+      GetIt.I.registerSingleton<NotificationRepository>(notificationRepository);
+    }
+
+    final sharedPreferences = await SharedPreferences.getInstance();
+    if (!GetIt.I.isRegistered<SharedPreferences>()) {
+      GetIt.I.registerSingleton<SharedPreferences>(sharedPreferences);
+    }
+
+    AppLogger.info('Dependencies initialized successfully');
+  } catch (e) {
+    AppLogger.error('Failed to initialize dependencies', error: e);
+    rethrow;
+  }
+}
+
+class App extends StatelessWidget {
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -94,42 +108,32 @@ class App extends StatelessWidget {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             home: BlocBuilder<AuthBloc, AuthState>(
-              bloc: BlocProvider.of<AuthBloc>(context),
-              // ignore: missing_return
               builder: (BuildContext context, AuthState state) {
-                if (state is Uninitialized) {
-                  print('uninitialized');
-                  return SplashPage();
-                }
-                if (state is Unauthenticated) {
-                  print('unauthenticated');
-                  return LoginPage(userRepository: userRepository);
-                }
-                if (state is Authenticated) {
-                  print('authenticated');
-                  return HomePage(userRepository: userRepository);
-                }
-                if (state is ShowTeamPage) {
-                  print('show team page');
-                  return TeamPage(teamId: state.page);
-                }
-                if (state is Loading) {
-                  print('loading');
-                  return LoadingIndicator();
-                }
+                AppLogger.debug('Auth state changed: ${state.runtimeType}');
 
-                if (state is FirstTimeForm) {
-                  print('first time');
-                  return FirstTimePage(
-                    user: state.user,
-                    userRepository: userRepository,
-                  );
-                }
-                if (state is UserProfile) {
-                  print('user profile');
-                  return ProfilePage(user: state.user);
-                } else {
-                  return LoadingIndicator();
+                switch (state.runtimeType) {
+                  case Uninitialized:
+                    return SplashPage();
+                  case Unauthenticated:
+                    return LoginPage(userRepository: GetIt.I<UserRepository>());
+                  case Authenticated:
+                    return HomePage(userRepository: GetIt.I<UserRepository>());
+                  case ShowTeamPage:
+                    final teamState = state as ShowTeamPage;
+                    return TeamPage(teamId: teamState.page);
+                  case Loading:
+                    return LoadingIndicator();
+                  case FirstTimeForm:
+                    final firstTimeState = state as FirstTimeForm;
+                    return FirstTimePage(
+                      user: firstTimeState.user,
+                      userRepository: GetIt.I<UserRepository>(),
+                    );
+                  case UserProfile:
+                    final profileState = state as UserProfile;
+                    return ProfilePage(user: profileState.user);
+                  default:
+                    return LoadingIndicator();
                 }
               },
             ),
@@ -147,7 +151,7 @@ class App extends StatelessWidget {
 enum ThemeEvent { toggle }
 
 class ThemeBloc extends Bloc<ThemeEvent, ThemeData> {
-  ThemeBloc(ThemeData initialState) : super(initialState) {
+  ThemeBloc(super.initialState) {
     on<ThemeEvent>((event, emit) {
       if (event == ThemeEvent.toggle) {
         if (state == ThemeData.dark()) {

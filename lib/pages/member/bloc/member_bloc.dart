@@ -3,6 +3,7 @@ import 'package:meta/meta.dart';
 import 'package:teamshare/data/team_repository.dart';
 import 'package:teamshare/models/team.dart';
 import 'package:teamshare/models/user.dart';
+import '../../../utils/app_logger.dart';
 
 part 'member_event.dart';
 part 'member_state.dart';
@@ -24,7 +25,8 @@ class MemberBloc extends Bloc<MemberEvent, MemberState> {
       final team = await _teamRepository.getTeamMembers(event.teamId);
       emit(MembersLoaded(team));
     } catch (e) {
-      print('Error loading members: $e');
+      AppLogger.error('Error loading members: $e');
+      // Could emit error state here if available
     }
   }
 
@@ -37,7 +39,8 @@ class MemberBloc extends Bloc<MemberEvent, MemberState> {
       final team = await _teamRepository.getTeamMembers(event.teamId);
       emit(MembersLoaded(team));
     } catch (e) {
-      print('Error removing member: $e');
+      AppLogger.error('Error removing member: $e');
+      // Could emit error state here if available
     }
   }
 }
