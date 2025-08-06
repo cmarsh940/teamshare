@@ -20,19 +20,27 @@ class TeamRepository {
 
   Future<List<dynamic>> fetchTeams(dynamic id) async {
     try {
+      // Validate ID before making API call
+      if (id == null || id.toString().isEmpty) {
+        AppLogger.error('Cannot fetch teams: User ID is null or empty');
+        throw Exception('User ID is required to fetch teams');
+      }
+
       final cacheKey = 'teams_$id';
       if (_teamsCache.containsKey(cacheKey)) {
         AppLogger.performance('Using cached teams for $id');
         return _teamsCache[cacheKey]!;
       }
 
-      final response = await SecureHttpClient.get(Uri.parse(fetchTeamUrl(id)));
+      final url = fetchTeamUrl(id);
+      final response = await SecureHttpClient.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final List<dynamic> decoded = jsonDecode(response.body);
         _teamsCache[cacheKey] = decoded;
         return decoded;
       } else {
+        AppLogger.warning('Teams fetch failed: ${response.statusCode}');
         throw Exception('Failed to fetch teams: ${response.statusCode}');
       }
     } catch (e) {

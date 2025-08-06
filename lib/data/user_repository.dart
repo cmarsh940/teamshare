@@ -30,25 +30,50 @@ class UserRepository {
 
       if (response.statusCode == 200) {
         AppLogger.network('Login response received: ${response.statusCode}');
-        final Map<String, dynamic> userMap = jsonDecode(response.body);
+        final Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+        // Check if token exists at the root level of the response
+        final rootToken = responseMap['token'] as String?;
+
+        // Extract the user object from the nested response (same as signUp)
+        final Map<String, dynamic> userMap =
+            responseMap['user'] as Map<String, dynamic>;
         final User user = User.fromJson(userMap);
+
         AppLogger.auth('User authenticated: ${user.email}');
 
         if (user.id == null) {
           AppLogger.warning('User ID is null in authentication response');
           return null;
         } else {
-          final token = user.token ?? 'test'; // Use actual token from response
+          // Use token from root level if user token is null
+          final token = user.token ?? rootToken;
           final id = user.id!;
           const firstTime = false;
 
-          // Store sensitive data securely
-          await SecureStorage.setString(_userTokenKey, token);
-          await SecureStorage.setString(_userIdKey, id);
-          await SecureStorage.setBool(_isLoginKey, true);
-          await SecureStorage.setBool(_firstTimeKey, firstTime);
-          await SecureStorage.setBool('asked_for_permissions', false);
-          await SecureStorage.setString(_themeKey, 'light');
+          if (token != null) {
+            // Store user data securely
+            await SecureStorage.setString(_userTokenKey, token);
+            await SecureStorage.setString(_userIdKey, id);
+            await SecureStorage.setBool(_isLoginKey, true);
+            await SecureStorage.setBool(_firstTimeKey, firstTime);
+            await SecureStorage.setBool('asked_for_permissions', false);
+            await SecureStorage.setString(_themeKey, 'light');
+
+            AppLogger.info('User data stored successfully after login');
+          } else {
+            AppLogger.warning(
+              'Token missing, storing user data without token for development',
+            );
+
+            // Store user data even without token for development purposes
+            await SecureStorage.setString(_userTokenKey, 'dev-token');
+            await SecureStorage.setString(_userIdKey, id);
+            await SecureStorage.setBool(_isLoginKey, true);
+            await SecureStorage.setBool(_firstTimeKey, firstTime);
+            await SecureStorage.setBool('asked_for_permissions', false);
+            await SecureStorage.setString(_themeKey, 'light');
+          }
 
           return user;
         }
@@ -114,11 +139,27 @@ class UserRepository {
   }
 
   Future<String> getId() async {
-    return await SecureStorage.getString(_userIdKey) ?? '';
+    final result = await SecureStorage.getString(_userIdKey) ?? '';
+
+    // Check if the ID looks corrupted (contains non-printable characters)
+    final isCorrupted =
+        result.contains(RegExp(r'[^\w\-]')) && result.isNotEmpty;
+
+    if (result.isEmpty) {
+      AppLogger.warning('User ID is empty! This will cause API failures.');
+    } else if (isCorrupted) {
+      AppLogger.error('User ID appears corrupted, clearing storage');
+      await SecureStorage.clear();
+      return '';
+    }
+
+    return result;
   }
 
   Future<bool> checkFirstTime() async {
-    return await SecureStorage.getBool(_firstTimeKey) ?? false;
+    final result = await SecureStorage.getBool(_firstTimeKey) ?? false;
+    AppLogger.info('checkFirstTime result: $result');
+    return result;
   }
 
   Future<String?> getTheme() async {
@@ -135,11 +176,27 @@ class UserRepository {
   }
 
   Future<String?> getToken() async {
-    return await SecureStorage.getString(_userTokenKey);
+    final result = await SecureStorage.getString(_userTokenKey);
+    AppLogger.info(
+      'getToken result: ${result != null ? 'Token exists' : 'No token'}',
+    );
+    return result;
   }
 
   Future<bool?> isSignedIn() async {
-    return await SecureStorage.getBool(_isLoginKey);
+    // Check if stored data is corrupted before proceeding
+    final userId = await SecureStorage.getString(_userIdKey) ?? '';
+    if (userId.isNotEmpty) {
+      final isCorrupted = userId.contains(RegExp(r'[^\w\-]'));
+      if (isCorrupted) {
+        AppLogger.error('Detected corrupted user data during sign-in check');
+        await SecureStorage.clear();
+        return false;
+      }
+    }
+
+    final result = await SecureStorage.getBool(_isLoginKey);
+    return result;
   }
 
   Future<dynamic> getUser() async {
@@ -200,9 +257,19 @@ class UserRepository {
         },
       );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> userMap = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        // Log response body for debugging
+        AppLogger.network('Sign up response received: ${response.statusCode}');
+        AppLogger.network('Response body: ${response.body}');
+        final Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+        // Extract the user object from the nested response
+        final Map<String, dynamic> userMap =
+            responseMap['user'] as Map<String, dynamic>;
         final User user = User.fromJson(userMap);
+
+        // Log the entire user object for debugging
+        AppLogger.auth('User signed up: ${user.toJson()}');
 
         if (user.id == null) {
           AppLogger.warning('User ID is null in sign up response');
@@ -210,14 +277,25 @@ class UserRepository {
         } else {
           final token = user.token;
           final id = user.id!;
-          final firstTime = user.firstTime;
+          // For new registrations, set firstTime to false so they go directly to authenticated state
+          const firstTime = false;
 
           if (token != null) {
+            AppLogger.info('Storing user data after signup:');
+            AppLogger.info('- Token: ${token.substring(0, 10)}...');
+            AppLogger.info('- User ID: $id');
+            AppLogger.info('- First time: $firstTime');
+
+            // Store user data securely
             await SecureStorage.setString(_userTokenKey, token);
             await SecureStorage.setString(_userIdKey, id);
             await SecureStorage.setBool(_isLoginKey, true);
-            await SecureStorage.setBool(_firstTimeKey, firstTime ?? false);
+            await SecureStorage.setBool(_firstTimeKey, firstTime);
             await SecureStorage.setString(_themeKey, 'light');
+
+            AppLogger.info('User data stored successfully');
+          } else {
+            AppLogger.warning('Token is null, not storing user data');
           }
 
           return user;

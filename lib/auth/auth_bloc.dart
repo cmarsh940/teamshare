@@ -25,30 +25,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   _mapAppStartedToState(AppStarted event, Emitter<AuthState> emit) async {
     try {
+      AppLogger.info('=== App Started - Checking authentication ===');
       final isSignedIn = await _userRepository.isSignedIn();
+      AppLogger.info('isSignedIn: $isSignedIn');
+
       if (isSignedIn == null || !isSignedIn) {
+        AppLogger.info('User is not signed in, emitting Unauthenticated');
         emit(Unauthenticated());
       } else {
-        final firstTime = await _userRepository.checkFirstTime();
-        if (firstTime) {
-          final user = await _userRepository.getUser();
-          if (user == null) {
-            AppLogger.error('User data is null despite being signed in');
-            emit(Unauthenticated());
-            return;
-          }
-          final Map<String, dynamic> userMap = jsonDecode(user);
-          final User newUser = User.fromJson(userMap);
-          emit(FirstTimeForm(newUser));
-        } else {
-          final String? id = await _userRepository.getId();
-          if (id == null) {
-            AppLogger.error('User ID is null despite being authenticated');
-            emit(Unauthenticated());
-            return;
-          }
-          emit(Authenticated(id));
+        AppLogger.info('User is signed in, getting user ID');
+        final String? id = await _userRepository.getId();
+        if (id == null || id.isEmpty) {
+          AppLogger.error('User ID is null despite being authenticated');
+          emit(Unauthenticated());
+          return;
         }
+        AppLogger.info('Emitting Authenticated for user ID: $id');
+        emit(Authenticated(id));
       }
     } catch (e) {
       AppLogger.error('Error during app startup: $e');
@@ -58,28 +51,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   _mapLoggedInToState(LoggedIn event, Emitter<AuthState> emit) async {
     try {
-      final bool firstTime = await _userRepository.checkFirstTime();
-      AppLogger.info('First time user: $firstTime');
-
-      if (firstTime) {
-        final user = await _userRepository.getUser();
-        if (user == null) {
-          AppLogger.error('User data is null during login');
-          emit(Unauthenticated());
-          return;
-        }
-        final Map<String, dynamic> userMap = jsonDecode(user);
-        final User newUser = User.fromJson(userMap);
-        emit(FirstTimeForm(newUser));
-      } else {
-        final String? id = await _userRepository.getId();
-        if (id == null) {
-          AppLogger.error('User ID is null during login');
-          emit(Unauthenticated());
-          return;
-        }
-        emit(Authenticated(id));
+      AppLogger.info('User logged in, getting user ID');
+      final String? id = await _userRepository.getId();
+      if (id == null || id.isEmpty) {
+        AppLogger.error('User ID is null during login');
+        emit(Unauthenticated());
+        return;
       }
+      AppLogger.info('Emitting Authenticated for user ID: $id');
+      emit(Authenticated(id));
     } catch (e) {
       AppLogger.error('Error during login: $e');
       emit(Unauthenticated());
@@ -117,15 +97,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   _mapFirstTimeToState(FirstTime event, Emitter<AuthState> emit) async {
     try {
-      final user = await _userRepository.getUser();
-      if (user == null) {
-        AppLogger.error('User data is null during first time setup');
+      // Since we removed FirstTimeForm, just redirect to authenticated state
+      final String? id = await _userRepository.getId();
+      if (id == null || id.isEmpty) {
+        AppLogger.error('User ID is null during first time setup');
         emit(Unauthenticated());
         return;
       }
-      final Map<String, dynamic> userMap = jsonDecode(user);
-      final User newUser = User.fromJson(userMap);
-      emit(FirstTimeForm(newUser));
+      AppLogger.info('FirstTime event received, redirecting to Authenticated');
+      emit(Authenticated(id));
     } catch (e) {
       AppLogger.error('Error during first time setup: $e');
       emit(Unauthenticated());

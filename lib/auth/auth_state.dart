@@ -36,15 +36,6 @@ class UserProfile extends AuthState {
   String toString() => 'UserProfile { user: $user }';
 }
 
-class FirstTimeForm extends AuthState {
-  final user;
-
-  FirstTimeForm(this.user);
-
-  @override
-  String toString() => 'FirstTimeForm { user: $user }';
-}
-
 class ShowTeamPage extends AuthState {
   final String page;
 

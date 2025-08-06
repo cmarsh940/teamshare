@@ -123,12 +123,6 @@ class App extends StatelessWidget {
                     return TeamPage(teamId: teamState.page);
                   case Loading:
                     return LoadingIndicator();
-                  case FirstTimeForm:
-                    final firstTimeState = state as FirstTimeForm;
-                    return FirstTimePage(
-                      user: firstTimeState.user,
-                      userRepository: GetIt.I<UserRepository>(),
-                    );
                   case UserProfile:
                     final profileState = state as UserProfile;
                     return ProfilePage(user: profileState.user);

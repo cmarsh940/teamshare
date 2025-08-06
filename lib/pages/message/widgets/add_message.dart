@@ -27,8 +27,7 @@ class _AddMessageWidgetState extends State<AddMessageWidget> {
         listener: (context, state) {
           if (state is MessageSent) {
             _controller.clear();
-            // Navigate back to the previous page after sending message
-            Navigator.pop(context);
+            // Show a snackbar message after sending message
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Message sent successfully!')),
             );
