@@ -6,7 +6,7 @@ import 'package:teamshare/pages/notification/bloc/notification_bloc.dart';
 import 'package:teamshare/pages/notification/widgets/notification_list.dart';
 
 class NotificationPage extends StatelessWidget {
-  NotificationRepository notificationRepository =
+  final NotificationRepository notificationRepository =
       GetIt.I<NotificationRepository>();
 
   NotificationPage({super.key});

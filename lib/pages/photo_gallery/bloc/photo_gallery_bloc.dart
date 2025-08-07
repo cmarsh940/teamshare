@@ -10,6 +10,7 @@ class PhotoGalleryBloc extends Bloc<PhotoGalleryEvent, PhotoGalleryState> {
   TeamRepository teamRepository = GetIt.I<TeamRepository>();
   PhotoGalleryBloc() : super(PhotoGalleryInitial()) {
     on<LoadPhotoGallery>(_mapLoadPhotoGalleryToState);
+    on<AddPhotoToGallery>(_mapAddPhotoToGalleryToState);
   }
 
   _mapLoadPhotoGalleryToState(

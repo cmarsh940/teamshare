@@ -9,6 +9,7 @@ import 'package:teamshare/pages/member/member_page.dart';
 import 'package:teamshare/pages/message/message_page.dart';
 import 'package:teamshare/pages/photo_gallery/photo_gallery_page.dart';
 import 'package:teamshare/pages/post/post_page.dart';
+import 'package:teamshare/utils/app_logger.dart';
 
 class TeamPage extends StatefulWidget {
   final String teamId;
@@ -28,7 +29,13 @@ class _TeamPageState extends State<TeamPage> {
 
   @override
   void initState() {
-    print('Team id is : ${widget.teamId}');
+    _initUserId();
+    _initWidgetOptions();
+    super.initState();
+  }
+
+  void _initWidgetOptions() {
+    _widgetOptions.clear();
     _widgetOptions.add(PostPage(teamId: widget.teamId, userId: userId));
     _widgetOptions.add(
       MessagePage(teamId: widget.teamId, userId: userId, isTeamMessages: true),
@@ -38,10 +45,6 @@ class _TeamPageState extends State<TeamPage> {
       CalendarPage(teamId: widget.teamId, teamRepository: teamRepository),
     );
     _widgetOptions.add(MemberPage(teamId: widget.teamId));
-
-    _initUserId();
-
-    super.initState();
   }
 
   @override
@@ -51,6 +54,16 @@ class _TeamPageState extends State<TeamPage> {
 
   Future<void> _initUserId() async {
     userId = await userRepository.getId();
+
+    if (userId.isEmpty) {
+      AppLogger.error('User ID is empty! Check SecureStorage.');
+      return;
+    }
+
+    // Rebuild widget options with the initialized userId
+    setState(() {
+      _initWidgetOptions();
+    });
   }
 
   void _onItemTapped(int index) {

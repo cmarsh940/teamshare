@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:teamshare/data/repositories.dart';
 import 'package:teamshare/models/comment.dart';
-import 'package:teamshare/models/post.dart';
 import 'package:teamshare/pages/post/bloc/post_bloc.dart';
 
 class PostList extends StatefulWidget {
@@ -18,13 +16,23 @@ class PostList extends StatefulWidget {
 
 class _PostListState extends State<PostList> {
   late PostBloc _postBloc;
-  late final String userId;
+  String userId = '';
 
   @override
   void initState() {
     userId = widget.userId;
     super.initState();
     _postBloc = GetIt.I<PostBloc>();
+  }
+
+  @override
+  void didUpdateWidget(PostList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.userId != widget.userId) {
+      setState(() {
+        userId = widget.userId;
+      });
+    }
   }
 
   String timeAgo(DateTime date) {
@@ -512,7 +520,6 @@ class _PostListState extends State<PostList> {
 
   @override
   void dispose() {
-    _postBloc.close();
     super.dispose();
   }
 }

@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
-import 'package:teamshare/pages/post/bloc/post_bloc.dart';
 import 'package:teamshare/pages/post/widgets/create_post_form.dart';
 import 'package:teamshare/pages/post/widgets/post_list.dart';
 

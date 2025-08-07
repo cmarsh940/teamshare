@@ -11,7 +11,7 @@ class LoadCalendar extends CalendarEvent {
 
 class AddCalendarEvent extends CalendarEvent {
   final String teamId;
-  TeamCalendar event;
+  final TeamCalendar event;
 
   AddCalendarEvent({required this.teamId, required this.event});
 }

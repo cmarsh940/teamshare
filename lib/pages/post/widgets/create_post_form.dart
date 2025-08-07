@@ -5,7 +5,6 @@ import 'package:teamshare/models/post.dart';
 import 'package:teamshare/pages/post/bloc/post_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data';
 
 class CreatePostForm extends StatefulWidget {
   final String teamId;

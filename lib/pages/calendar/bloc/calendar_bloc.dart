@@ -1,10 +1,7 @@
-import 'dart:math';
-
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:teamshare/data/team_repository.dart';
 import 'package:teamshare/models/calendar.dart';
-import 'package:teamshare/models/team.dart';
 
 part 'calendar_event.dart';
 part 'calendar_state.dart';

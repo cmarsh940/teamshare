@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 
 String formatEventDateTime(DateTime? start, DateTime? end) {
   if (start == null) return '';
-  final dayFormat = DateFormat('E, MMM d');
+  // final dayFormat = DateFormat('E, MMM d');
   final timeFormat = DateFormat('h:mm a');
 
   // Ordinal suffix

@@ -54,7 +54,6 @@ class _MemberListState extends State<MemberList> {
             itemCount: state.team.members.length,
             itemBuilder: (context, index) {
               final member = state.team.members[index];
-              final isAdmin = state.team.admins.contains(userId);
 
               return ListTile(
                 leading: CircleAvatar(

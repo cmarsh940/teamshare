@@ -8,11 +8,8 @@ import 'package:teamshare/data/user_repository.dart';
 import 'package:teamshare/pages/dashboard/dashboard_page.dart';
 import 'package:teamshare/pages/message/message_page.dart';
 import 'package:teamshare/pages/notification/notification_page.dart';
-import 'package:teamshare/pages/profile/profile_page.dart';
 import 'package:teamshare/pages/setting/setting_page.dart';
-import 'package:teamshare/pages/team/team_page.dart';
-
-import '../main.dart';
+import 'package:teamshare/utils/app_logger.dart';
 
 class HomePage extends StatefulWidget {
   final UserRepository userRepository;
@@ -38,6 +35,11 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     _initUserId();
+    _initWidgetOptions();
+  }
+
+  void _initWidgetOptions() {
+    _widgetOptions.clear();
     _widgetOptions.add(DashboardPage());
     _widgetOptions.add(NotificationPage());
     _widgetOptions.add(MessagePage(isTeamMessages: false, userId: userId));
@@ -56,6 +58,15 @@ class _HomePageState extends State<HomePage>
 
   Future<void> _initUserId() async {
     userId = await userRepository.getId();
+    if (userId.isEmpty) {
+      AppLogger.error('User ID is empty during HomePage initialization');
+      return;
+    }
+
+    // Rebuild widget options with the initialized userId
+    setState(() {
+      _initWidgetOptions();
+    });
   }
 
   void _onItemTapped(int index) {

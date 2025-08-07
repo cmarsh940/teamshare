@@ -10,7 +10,6 @@ import 'package:teamshare/data/notification_repository.dart';
 import 'package:teamshare/data/repositories.dart';
 import 'package:teamshare/data/team_repository.dart';
 import 'package:teamshare/pages/calendar/bloc/calendar_bloc.dart';
-import 'package:teamshare/pages/firstTime/first_time_page.dart';
 import 'package:teamshare/pages/home.dart';
 import 'package:teamshare/pages/login/login_page.dart';
 import 'package:teamshare/pages/message/bloc/message_bloc.dart';

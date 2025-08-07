@@ -2,7 +2,6 @@ import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:teamshare/data/team_repository.dart';
 import 'package:teamshare/models/team.dart';
-import 'package:teamshare/models/user.dart';
 import '../../../utils/app_logger.dart';
 
 part 'member_event.dart';
