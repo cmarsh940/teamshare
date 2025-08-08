@@ -24,3 +24,10 @@ class DeleteTeamEvent extends TeamEvent {
 
   DeleteTeamEvent({required this.teamId});
 }
+
+class JoinTeamEvent extends TeamEvent {
+  final String teamCode;
+  final String userId;
+
+  JoinTeamEvent({required this.teamCode, required this.userId});
+}

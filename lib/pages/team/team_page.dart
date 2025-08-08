@@ -26,11 +26,13 @@ class _TeamPageState extends State<TeamPage> {
   final TeamRepository teamRepository = GetIt.I<TeamRepository>();
   String userId = '';
   UserRepository userRepository = GetIt.instance<UserRepository>();
+  String teamCode = '';
 
   @override
   void initState() {
     _initUserId();
     _initWidgetOptions();
+    _getTeamCode();
     super.initState();
   }
 
@@ -72,6 +74,16 @@ class _TeamPageState extends State<TeamPage> {
     });
   }
 
+  _getTeamCode() async {
+    teamCode = await teamRepository.getTeamCode(widget.teamId);
+    if (teamCode != '') {
+      AppLogger.info('Team code retrieved: $teamCode');
+      setState(() {});
+    } else {
+      AppLogger.error('Failed to retrieve team code for ${widget.teamId}');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,6 +100,7 @@ class _TeamPageState extends State<TeamPage> {
         backgroundColor: Colors.transparent,
         elevation: 0.0,
         actions: <Widget>[
+          Text('Team #: $teamCode'),
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: IconButton(

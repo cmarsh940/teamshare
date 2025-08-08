@@ -27,20 +27,36 @@ class TeamRepository {
       }
 
       final cacheKey = 'teams_$id';
+
       if (_teamsCache.containsKey(cacheKey)) {
-        AppLogger.performance('Using cached teams for $id');
+        AppLogger.performance(
+          'Using cached teams for $id - ${_teamsCache[cacheKey]!.length} teams',
+        );
         return _teamsCache[cacheKey]!;
       }
-
       final url = fetchTeamUrl(id);
+
       final response = await SecureHttpClient.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final List<dynamic> decoded = jsonDecode(response.body);
+
+        // Log each team returned by the API in detail
+        for (int i = 0; i < decoded.length; i++) {
+          final team = decoded[i];
+          AppLogger.info('   🏠 Team $i from API:');
+          AppLogger.info('      - Name: ${team['name']}');
+          AppLogger.info('      - ID: ${team['_id']}');
+          AppLogger.info('      - Members: ${team['members']}');
+          AppLogger.info('      - Admins: ${team['admins']}');
+        }
+
         _teamsCache[cacheKey] = decoded;
+
         return decoded;
       } else {
         AppLogger.warning('Teams fetch failed: ${response.statusCode}');
+        AppLogger.warning('Response body: ${response.body}');
         throw Exception('Failed to fetch teams: ${response.statusCode}');
       }
     } catch (e) {
@@ -419,11 +435,93 @@ class TeamRepository {
     }
   }
 
+  Future<String> getTeamCode(String teamId) async {
+    try {
+      final url = fetchTeamCodeUrl(teamId);
+      final response = await SecureHttpClient.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        return jsonResponse['teamCode'] as String;
+      } else {
+        throw Exception('Failed to load team code: ${response.statusCode}');
+      }
+    } catch (e) {
+      AppLogger.error('Error loading team code', error: e);
+      rethrow;
+    }
+  }
+
+  Future<void> joinTeam(String teamCode, String userId) async {
+    try {
+      final response = await SecureHttpClient.post(
+        Uri.parse(joinTeamUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'teamCode': teamCode, 'userId': userId}),
+      );
+
+      if (response.statusCode == 200) {
+        // Clear teams cache since we joined a new team
+        _teamsCache.clear();
+        AppLogger.info('Joined team successfully');
+      } else {
+        // Parse the error response to provide specific feedback
+        String errorMessage = 'Failed to join team';
+
+        try {
+          final errorResponse = jsonDecode(response.body);
+          if (errorResponse['message'] != null) {
+            errorMessage = errorResponse['message'];
+          }
+        } catch (e) {
+          // If we can't parse the error response, provide generic messages based on status code
+          switch (response.statusCode) {
+            case 400:
+              errorMessage = 'Invalid team code. Please check and try again.';
+              break;
+            case 404:
+              errorMessage =
+                  'Team not found. Please verify the code is correct.';
+              break;
+            case 409:
+              errorMessage = 'You are already a member of this team.';
+              break;
+            case 500:
+              errorMessage = 'Server error. Please try again later.';
+              break;
+            default:
+              errorMessage = 'Unable to join team. Please try again.';
+          }
+        }
+
+        AppLogger.warning(
+          'Join team failed: ${response.statusCode} - $errorMessage',
+        );
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      AppLogger.error('Error joining team', error: e);
+      rethrow;
+    }
+  }
+
+  /// Clear teams cache for a specific user or all teams
+  Future<void> clearTeamsCache([String? userId]) async {
+    if (userId != null) {
+      final cacheKey = 'teams_$userId';
+      _teamsCache.remove(cacheKey);
+      AppLogger.info('Cleared teams cache for user: $userId');
+    } else {
+      _teamsCache.clear();
+      AppLogger.info('Cleared all teams cache');
+    }
+  }
+
   /// Clear all caches - useful for logout or refresh
   void clearCache() {
     _teamsCache.clear();
     _postsCache.clear();
     _calendarCache.clear();
-    AppLogger.info('Repository cache cleared');
+    AppLogger.info('Repository cache cleared completely');
   }
 }

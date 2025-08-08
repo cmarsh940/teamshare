@@ -12,6 +12,7 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
     on<TeamCreateEvent>(_mapCreateTeamEventToState);
     on<LoadForm>(_mapLoadFormEventToState);
     on<DeleteTeamEvent>(_mapDeleteTeamEventToState);
+    on<JoinTeamEvent>(_mapJoinTeamEventToState);
   }
 
   _mapCreateTeamEventToState(
@@ -20,9 +21,9 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
   ) async {
     try {
       await _teamRepository.createTeam(event.team);
-      emit(TeamCreated());
+      emit(TeamCreatedSuccess());
     } catch (e) {
-      emit(TeamCreationFailed());
+      emit(TeamCreationError());
     }
   }
 
@@ -44,6 +45,15 @@ class TeamBloc extends Bloc<TeamEvent, TeamState> {
       emit(TeamDeleted(teamId: event.teamId));
     } catch (e) {
       emit(TeamDeletionFailed());
+    }
+  }
+
+  _mapJoinTeamEventToState(JoinTeamEvent event, Emitter<TeamState> emit) async {
+    try {
+      await _teamRepository.joinTeam(event.teamCode, event.userId);
+      emit(TeamJoinedSuccess());
+    } catch (e) {
+      emit(TeamJoinError(message: e.toString()));
     }
   }
 }

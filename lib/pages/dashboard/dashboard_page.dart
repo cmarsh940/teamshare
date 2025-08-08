@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:teamshare/auth/auth_bloc.dart';
+import 'package:teamshare/main.dart';
 import 'package:teamshare/pages/dashboard/bloc/dashboard_bloc.dart';
 import 'package:teamshare/pages/team/widgets/create_team_form.dart';
+import 'package:teamshare/pages/team/widgets/join_team_page.dart';
 import 'package:teamshare/pages/team/widgets/team_list.dart';
+import 'package:teamshare/utils/app_logger.dart';
 
 class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+  final String userId;
+  const DashboardPage({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocProvider<DashboardBloc>(
-        create: (context) => DashboardBloc(),
+      body: BlocProvider<DashboardBloc>.value(
+        value: GetIt.I<DashboardBloc>(),
         child: BlocBuilder<DashboardBloc, DashboardState>(
           builder: (context, state) {
             if (state is DashboardInitial) {
@@ -41,6 +46,29 @@ class DashboardPage extends StatelessWidget {
                             child: Chip(
                               label: Text('My Teams'),
                               backgroundColor: Colors.black,
+                              labelStyle: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => JoinTeamPage(userId: userId),
+                                ),
+                              );
+                            },
+                            child: Chip(
+                              label: Text('Join a Team'),
+                              backgroundColor: Colors.orange,
                               labelStyle: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
@@ -149,9 +177,12 @@ class DashboardPage extends StatelessWidget {
                                 builder: (context) => const CreateTeamForm(),
                               ),
                             ).then((_) {
+                              AppLogger.info(
+                                '*********** Returning from CreateTeamForm',
+                              );
                               BlocProvider.of<DashboardBloc>(
                                 context,
-                              ).add(LoadTeams());
+                              ).add(ForceRefreshTeams());
                             });
                           },
                         ),

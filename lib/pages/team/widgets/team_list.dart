@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:teamshare/auth/auth_bloc.dart';
 import 'package:teamshare/data/user_repository.dart';
 import 'package:teamshare/pages/team/bloc/team_bloc.dart';
+import 'package:teamshare/utils/app_logger.dart';
 
 class TeamList extends StatefulWidget {
   final List<dynamic> teams;
@@ -17,11 +18,24 @@ class TeamList extends StatefulWidget {
 class _TeamListState extends State<TeamList> {
   final UserRepository userRepository = GetIt.I<UserRepository>();
   String userId = "";
+  bool emptyTeams = false;
 
   @override
   void initState() {
     super.initState();
+    AppLogger.debug('Initializing TeamList');
     _getUserId();
+    _checkTeams();
+  }
+
+  _checkTeams() {
+    if (widget.teams.isEmpty) {
+      emptyTeams = true;
+    } else {
+      emptyTeams = false;
+    }
+    setState(() {});
+    AppLogger.debug('Teams checked: $emptyTeams');
   }
 
   _getUserId() async {
@@ -49,37 +63,42 @@ class _TeamListState extends State<TeamList> {
           // Handle other states if needed
         },
         child: Scaffold(
-          appBar: AppBar(title: const Text('New Team')),
-          body: ListView.builder(
-            itemCount: widget.teams.length,
-            itemBuilder: (context, index) {
-              final team = widget.teams[index];
-              return Card(
-                child: ListTile(
-                  onTap: () {
-                    BlocProvider.of<AuthBloc>(
-                      context,
-                    ).add(ChangePage(team['_id']));
-                    Navigator.pop(context);
-                  },
-                  title: Text(team['name']),
-                  subtitle: Text(team['description'] ?? 'No description'),
-                  trailing:
-                      (team['admins'] != null &&
-                              (team['admins'] as List).contains(userId))
-                          ? IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              context.read<TeamBloc>().add(
-                                DeleteTeamEvent(teamId: team['_id']),
-                              );
-                            },
-                          )
-                          : null,
-                ),
-              );
-            },
-          ),
+          appBar: AppBar(title: const Text('My Teams')),
+          body:
+              emptyTeams
+                  ? Center(child: Text('No Teams Available'))
+                  : ListView.builder(
+                    itemCount: widget.teams.length,
+                    itemBuilder: (context, index) {
+                      final team = widget.teams[index];
+                      return Card(
+                        child: ListTile(
+                          onTap: () {
+                            BlocProvider.of<AuthBloc>(
+                              context,
+                            ).add(ChangePage(team['_id']));
+                            Navigator.pop(context);
+                          },
+                          title: Text(team['name']),
+                          subtitle: Text(
+                            team['description'] ?? 'No description',
+                          ),
+                          trailing:
+                              (team['admins'] != null &&
+                                      (team['admins'] as List).contains(userId))
+                                  ? IconButton(
+                                    icon: Icon(Icons.delete),
+                                    onPressed: () {
+                                      context.read<TeamBloc>().add(
+                                        DeleteTeamEvent(teamId: team['_id']),
+                                      );
+                                    },
+                                  )
+                                  : null,
+                        ),
+                      );
+                    },
+                  ),
         ),
       ),
     );

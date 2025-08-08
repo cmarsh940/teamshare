@@ -10,6 +10,7 @@ import 'package:teamshare/data/notification_repository.dart';
 import 'package:teamshare/data/repositories.dart';
 import 'package:teamshare/data/team_repository.dart';
 import 'package:teamshare/pages/calendar/bloc/calendar_bloc.dart';
+import 'package:teamshare/pages/dashboard/bloc/dashboard_bloc.dart';
 import 'package:teamshare/pages/home.dart';
 import 'package:teamshare/pages/login/login_page.dart';
 import 'package:teamshare/pages/message/bloc/message_bloc.dart';
@@ -66,6 +67,11 @@ Future<void> _initializeDependencies() async {
     final calendarBloc = CalendarBloc(GetIt.I<TeamRepository>());
     if (!GetIt.I.isRegistered<CalendarBloc>()) {
       GetIt.I.registerSingleton<CalendarBloc>(calendarBloc);
+    }
+
+    final dashboardBloc = DashboardBloc();
+    if (!GetIt.I.isRegistered<DashboardBloc>()) {
+      GetIt.I.registerSingleton<DashboardBloc>(dashboardBloc);
     }
 
     final messageBloc = MessageBloc();

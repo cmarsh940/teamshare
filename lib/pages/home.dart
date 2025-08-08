@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage>
 
   void _initWidgetOptions() {
     _widgetOptions.clear();
-    _widgetOptions.add(DashboardPage());
+    _widgetOptions.add(DashboardPage(userId: userId));
     _widgetOptions.add(NotificationPage());
     _widgetOptions.add(MessagePage(isTeamMessages: false, userId: userId));
     _widgetOptions.add(SettingPage());

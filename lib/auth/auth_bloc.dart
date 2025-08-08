@@ -1,9 +1,13 @@
 import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:meta/meta.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:teamshare/data/team_repository.dart';
 import 'package:teamshare/data/user_repository.dart';
 import 'package:teamshare/models/user.dart';
+import 'package:teamshare/pages/dashboard/bloc/dashboard_bloc.dart';
 import '../utils/app_logger.dart';
 
 part 'auth_event.dart';
@@ -25,22 +29,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   _mapAppStartedToState(AppStarted event, Emitter<AuthState> emit) async {
     try {
-      AppLogger.info('=== App Started - Checking authentication ===');
       final isSignedIn = await _userRepository.isSignedIn();
-      AppLogger.info('isSignedIn: $isSignedIn');
 
       if (isSignedIn == null || !isSignedIn) {
-        AppLogger.info('User is not signed in, emitting Unauthenticated');
         emit(Unauthenticated());
       } else {
-        AppLogger.info('User is signed in, getting user ID');
         final String? id = await _userRepository.getId();
         if (id == null || id.isEmpty) {
-          AppLogger.error('User ID is null despite being authenticated');
           emit(Unauthenticated());
           return;
         }
-        AppLogger.info('Emitting Authenticated for user ID: $id');
         emit(Authenticated(id));
       }
     } catch (e) {
@@ -51,14 +49,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   _mapLoggedInToState(LoggedIn event, Emitter<AuthState> emit) async {
     try {
-      AppLogger.info('User logged in, getting user ID');
       final String? id = await _userRepository.getId();
       if (id == null || id.isEmpty) {
-        AppLogger.error('User ID is null during login');
         emit(Unauthenticated());
         return;
       }
-      AppLogger.info('Emitting Authenticated for user ID: $id');
       emit(Authenticated(id));
     } catch (e) {
       AppLogger.error('Error during login: $e');
@@ -68,12 +63,39 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   _mapLoggedOutToState(LogOut event, Emitter<AuthState> emit) async {
     try {
-      AppLogger.info('User logging out');
+      // Clear all repository caches
+      try {
+        final teamRepository = GetIt.instance<TeamRepository>();
+        teamRepository.clearCache();
+
+        // Clear and reset DashboardBloc
+        if (GetIt.instance.isRegistered<DashboardBloc>()) {
+          final dashboardBloc = GetIt.instance<DashboardBloc>();
+          dashboardBloc.close();
+          GetIt.instance.unregister<DashboardBloc>();
+
+          // Re-register with fresh instance
+          final newDashboardBloc = DashboardBloc();
+          GetIt.instance.registerSingleton<DashboardBloc>(newDashboardBloc);
+        }
+      } catch (cacheError) {
+        AppLogger.error('Error clearing repository cache: $cacheError');
+      }
+
+      // Clear SharedPreferences directly
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+      } catch (prefsError) {
+        AppLogger.error('Error clearing SharedPreferences: $prefsError');
+      }
+
+      // Clear user repository and sign out user
       await _userRepository.signOut();
+
       emit(Unauthenticated());
     } catch (e) {
       AppLogger.error('Error during logout: $e');
-      // Still emit unauthenticated state even if signOut fails
       emit(Unauthenticated());
     }
   }
@@ -82,7 +104,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _userRepository.getUser();
       if (user == null) {
-        AppLogger.error('User data is null when fetching profile');
         emit(Unauthenticated());
         return;
       }
@@ -97,14 +118,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   _mapFirstTimeToState(FirstTime event, Emitter<AuthState> emit) async {
     try {
-      // Since we removed FirstTimeForm, just redirect to authenticated state
       final String? id = await _userRepository.getId();
       if (id == null || id.isEmpty) {
-        AppLogger.error('User ID is null during first time setup');
         emit(Unauthenticated());
         return;
       }
-      AppLogger.info('FirstTime event received, redirecting to Authenticated');
       emit(Authenticated(id));
     } catch (e) {
       AppLogger.error('Error during first time setup: $e');
@@ -117,7 +135,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (event.page == '0') {
         final String? id = await _userRepository.getId();
         if (id == null) {
-          AppLogger.error('User ID is null during page change');
           emit(Unauthenticated());
           return;
         }

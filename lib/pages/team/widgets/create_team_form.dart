@@ -37,7 +37,7 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Processing Data')));
 
-      Navigator.pop(context);
+      // Remove Navigator.pop(context) from here - let BlocListener handle it
     }
   }
 
@@ -47,101 +47,122 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
       appBar: AppBar(title: const Text('New Team')),
       body: BlocProvider<TeamBloc>(
         create: (context) => TeamBloc(teamRepository),
-        child: BlocBuilder<TeamBloc, TeamState>(
-          builder: (context, state) {
-            if (state is TeamInitial) {
-              context.read<TeamBloc>().add(LoadForm());
-            } else if (state is LoadingTeam) {
-              return Center(child: CircularProgressIndicator());
-            } else if (state is Loaded) {
-              return Container(
-                padding: const EdgeInsets.all(20),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: <Widget>[
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: InputDecoration(
-                          // icon: Icon(Icons., color: Colors.black),
-                          labelStyle: TextStyle(color: Colors.black45),
-                          labelText: 'Team Name',
-                          floatingLabelBehavior: FloatingLabelBehavior.always,
-                          hintText: 'Enter your team name',
-                          hintStyle: TextStyle(color: Colors.black45),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.black45),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.black),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter some text';
-                          }
-                          return null;
-                        },
-                        autocorrect: false,
-                        cursorColor: Colors.black45,
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _descriptionController,
-                        minLines: 6,
-                        keyboardType: TextInputType.multiline,
-                        maxLines: null,
-                        decoration: InputDecoration(
-                          labelStyle: TextStyle(color: Colors.black45),
-                          labelText: 'Team Description',
-                          floatingLabelBehavior: FloatingLabelBehavior.always,
-                          hintText: 'Enter your team description',
-                          hintStyle: TextStyle(color: Colors.black45),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.black45),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.black),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter some text';
-                          }
-                          return null;
-                        },
-                        autocorrect: false,
-                        cursorColor: Colors.black45,
-                      ),
-                      const Spacer(),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 25),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 50,
-                              vertical: 10,
-                            ),
-                          ),
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              createTeam(context);
-                            }
-                          },
-                          child: const Text(
-                            'Create Team',
-                            style: TextStyle(fontSize: 14, color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ],
+        child: BlocListener<TeamBloc, TeamState>(
+          listener: (context, state) {
+            if (state is TeamCreatedSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Team created successfully!')),
+              );
+              Navigator.pop(context);
+            } else if (state is TeamCreationError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'OH NO! There was an error creating the team. Please try again.',
                   ),
                 ),
               );
             }
-            return const Center(child: Text('No teams available'));
           },
+          child: BlocBuilder<TeamBloc, TeamState>(
+            builder: (context, state) {
+              if (state is TeamInitial) {
+                context.read<TeamBloc>().add(LoadForm());
+              } else if (state is LoadingTeam) {
+                return Center(child: CircularProgressIndicator());
+              } else if (state is Loaded) {
+                return Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: <Widget>[
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: InputDecoration(
+                            // icon: Icon(Icons., color: Colors.black),
+                            labelStyle: TextStyle(color: Colors.black45),
+                            labelText: 'Team Name',
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                            hintText: 'Enter your team name',
+                            hintStyle: TextStyle(color: Colors.black45),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black45),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
+                          autocorrect: false,
+                          cursorColor: Colors.black45,
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _descriptionController,
+                          minLines: 6,
+                          keyboardType: TextInputType.multiline,
+                          maxLines: null,
+                          decoration: InputDecoration(
+                            labelStyle: TextStyle(color: Colors.black45),
+                            labelText: 'Team Description',
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                            hintText: 'Enter your team description',
+                            hintStyle: TextStyle(color: Colors.black45),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black45),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
+                          autocorrect: false,
+                          cursorColor: Colors.black45,
+                        ),
+                        const Spacer(),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 25),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 50,
+                                vertical: 10,
+                              ),
+                            ),
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                createTeam(context);
+                              }
+                            },
+                            child: const Text(
+                              'Create Team',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return const Center(child: Text('No teams available'));
+            },
+          ),
         ),
       ),
     );

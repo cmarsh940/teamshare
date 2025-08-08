@@ -9,9 +9,9 @@ final class TeamInitial extends TeamState {
   }
 }
 
-final class TeamCreated extends TeamState {}
+final class TeamCreatedSuccess extends TeamState {}
 
-final class TeamCreationFailed extends TeamState {}
+final class TeamCreationError extends TeamState {}
 
 final class TeamLoadInProgress extends TeamState {}
 
@@ -41,3 +41,16 @@ final class TeamDeleted extends TeamState {
 }
 
 final class TeamDeletionFailed extends TeamState {}
+
+final class TeamJoinedSuccess extends TeamState {
+  TeamJoinedSuccess() {
+    print('TeamState joined successfully');
+  }
+}
+
+final class TeamJoinError extends TeamState {
+  final String message;
+  TeamJoinError({required this.message}) {
+    print('TeamState join error: $message');
+  }
+}
