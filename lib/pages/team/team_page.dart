@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:teamshare/auth/auth_bloc.dart';
 import 'package:teamshare/data/team_repository.dart';
 import 'package:teamshare/data/user_repository.dart';
+import 'package:teamshare/main.dart';
 import 'package:teamshare/pages/calendar/calendar_page.dart';
 import 'package:teamshare/pages/member/member_page.dart';
 import 'package:teamshare/pages/message/message_page.dart';
@@ -27,12 +28,13 @@ class _TeamPageState extends State<TeamPage> {
   String userId = '';
   UserRepository userRepository = GetIt.instance<UserRepository>();
   String teamCode = '';
+  String teamName = '';
 
   @override
   void initState() {
     _initUserId();
     _initWidgetOptions();
-    _getTeamCode();
+    _getTeamCodeAndName();
     super.initState();
   }
 
@@ -74,11 +76,13 @@ class _TeamPageState extends State<TeamPage> {
     });
   }
 
-  _getTeamCode() async {
-    teamCode = await teamRepository.getTeamCode(widget.teamId);
-    if (teamCode != '') {
-      AppLogger.info('Team code retrieved: $teamCode');
-      setState(() {});
+  _getTeamCodeAndName() async {
+    var team = await teamRepository.getTeamCode(widget.teamId);
+    if (team.isNotEmpty) {
+      setState(() {
+        teamCode = team['teamCode'] ?? '';
+        teamName = team['teamName'] ?? '';
+      });
     } else {
       AppLogger.error('Failed to retrieve team code for ${widget.teamId}');
     }
@@ -96,11 +100,33 @@ class _TeamPageState extends State<TeamPage> {
             BlocProvider.of<AuthBloc>(context).add(ChangePage('0'));
           },
         ),
-        title: Image.asset('assets/images/TEAM.png', height: 75),
+        title: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (teamName.isNotEmpty)
+              Text(
+                teamName,
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            if (teamCode.isNotEmpty)
+              Text(
+                'Team Code: $teamCode',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+          ],
+        ),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0.0,
         actions: <Widget>[
-          Text('Team #: $teamCode'),
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: IconButton(

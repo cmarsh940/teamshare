@@ -54,3 +54,13 @@ final class TeamJoinError extends TeamState {
     print('TeamState join error: $message');
   }
 }
+
+class TeamMembersLoaded extends TeamState {
+  final Team members;
+  TeamMembersLoaded(this.members);
+}
+
+class TeamMembersError extends TeamState {
+  final String message;
+  TeamMembersError(this.message);
+}

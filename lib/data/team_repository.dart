@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:get_it/get_it.dart';
 import 'package:teamshare/data/user_repository.dart';
+import 'package:teamshare/main.dart';
 import 'package:teamshare/models/comment.dart';
 import 'package:teamshare/models/calendar.dart';
 import 'package:teamshare/models/post.dart';
@@ -124,7 +125,7 @@ class TeamRepository {
     try {
       final url = fetchTeamMembersUrl(teamId);
       final response = await SecureHttpClient.get(Uri.parse(url));
-
+      AppLogger.network('response received for team members: ${response.body}');
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
         return Team.fromJson(jsonResponse);
@@ -435,14 +436,18 @@ class TeamRepository {
     }
   }
 
-  Future<String> getTeamCode(String teamId) async {
+  Future<Map<String, dynamic>> getTeamCode(String teamId) async {
     try {
       final url = fetchTeamCodeUrl(teamId);
       final response = await SecureHttpClient.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
-        return jsonResponse['teamCode'] as String;
+        var team = {
+          'teamCode': jsonResponse['teamCode'],
+          'teamName': jsonResponse['teamName'],
+        };
+        return team;
       } else {
         throw Exception('Failed to load team code: ${response.statusCode}');
       }

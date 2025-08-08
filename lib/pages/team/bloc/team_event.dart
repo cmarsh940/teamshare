@@ -31,3 +31,8 @@ class JoinTeamEvent extends TeamEvent {
 
   JoinTeamEvent({required this.teamCode, required this.userId});
 }
+
+class GetTeamMembers extends TeamEvent {
+  final String teamId;
+  GetTeamMembers(this.teamId);
+}

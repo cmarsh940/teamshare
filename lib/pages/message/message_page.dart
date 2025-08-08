@@ -38,14 +38,12 @@ class MessagePage extends StatelessWidget {
               builder:
                   (context) => BlocProvider<MessageBloc>.value(
                     value: GetIt.I<MessageBloc>(),
-                    child: AddMessageWidget(
-                      recipientId: isTeamMessages ? teamId! : userId,
-                    ),
+                    child: AddMessageWidget(teamId: teamId, userId: userId),
                   ),
             ),
           );
         },
-        tooltip: 'Add Post',
+        tooltip: 'Create Message',
         child: const Icon(Icons.add),
       ),
     );

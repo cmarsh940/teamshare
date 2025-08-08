@@ -64,7 +64,14 @@ class DashboardPage extends StatelessWidget {
                                   builder:
                                       (context) => JoinTeamPage(userId: userId),
                                 ),
-                              );
+                              ).then((_) {
+                                AppLogger.info(
+                                  '*********** Returning from JoinTeamPage',
+                                );
+                                BlocProvider.of<DashboardBloc>(
+                                  context,
+                                ).add(ForceRefreshTeams());
+                              });
                             },
                             child: Chip(
                               label: Text('Join a Team'),
