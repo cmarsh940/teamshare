@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meta/meta.dart';
 import 'package:teamshare/data/message_repository.dart';
+import 'package:teamshare/models/message.dart';
 
 part 'message_event.dart';
 part 'message_state.dart';
@@ -36,12 +37,12 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     try {
       await _messageRepository.sendMessage(
         event.message,
-        event.recipientId,
+        event.senderId,
         teamId: event.teamId,
       );
       emit(MessageSent());
       // Optionally, you can trigger a reload of messages after sending
-      add(LoadMessages(event.teamId, event.teamId != null, event.recipientId));
+      add(LoadMessages(event.teamId, event.teamId != null, event.senderId));
     } catch (error) {
       emit(ErrorLoadingMessages(error.toString()));
     }

@@ -21,23 +21,26 @@ class LikePost extends PostEvent {
   final String postId;
   final String userId;
   final List<Post> posts;
+  final String teamId;
 
-  LikePost(this.postId, this.userId, this.posts);
+  LikePost(this.postId, this.userId, this.posts, this.teamId);
 }
 
 class UnlikePost extends PostEvent {
   final String postId;
   final String userId;
   final List<Post> posts;
+  final String teamId;
 
-  UnlikePost(this.postId, this.userId, this.posts);
+  UnlikePost(this.postId, this.userId, this.posts, this.teamId);
 }
 
 class LoadComments extends PostEvent {
   final String postId;
   final List<Post> posts;
+  final String teamId;
 
-  LoadComments(this.postId, this.posts);
+  LoadComments(this.postId, this.posts, this.teamId);
 }
 
 class AddComment extends PostEvent {
@@ -45,8 +48,9 @@ class AddComment extends PostEvent {
   final Comment comment;
   final String userId;
   final List<Post> posts;
+  final String teamId;
 
-  AddComment(this.postId, this.comment, this.userId, this.posts);
+  AddComment(this.postId, this.comment, this.userId, this.posts, this.teamId);
 }
 
 class LikeComment extends PostEvent {
@@ -54,8 +58,15 @@ class LikeComment extends PostEvent {
   final String commentId;
   final String userId;
   final List<Post> posts;
+  final String teamId;
 
-  LikeComment(this.postId, this.commentId, this.userId, this.posts);
+  LikeComment(
+    this.postId,
+    this.commentId,
+    this.userId,
+    this.posts,
+    this.teamId,
+  );
 }
 
 class UnlikeComment extends PostEvent {
@@ -63,6 +74,19 @@ class UnlikeComment extends PostEvent {
   final String commentId;
   final String userId;
   final List<Post> posts;
+  final String teamId;
 
-  UnlikeComment(this.postId, this.commentId, this.userId, this.posts);
+  UnlikeComment(
+    this.postId,
+    this.commentId,
+    this.userId,
+    this.posts,
+    this.teamId,
+  );
+}
+
+class RefreshPosts extends PostEvent {
+  final String teamId;
+
+  RefreshPosts(this.teamId);
 }

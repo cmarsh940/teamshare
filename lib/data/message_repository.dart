@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:teamshare/models/message.dart';
+
 import '../constants.dart';
 import '../utils/secure_http_client.dart';
 import '../utils/app_logger.dart';
@@ -30,22 +32,25 @@ class MessageRepository {
 
   /// Send a message
   Future<void> sendMessage(
-    String message,
-    String recipientId, {
+    Message message,
+    String senderId, {
     String? teamId,
   }) async {
     try {
       final uri = Uri.parse(
         teamId != null
             ? '$baseUrl/teams/$teamId/messages'
-            : '$baseUrl/users/$recipientId/messages',
+            : '$baseUrl/users/$senderId/messages',
       );
 
       final response = await SecureHttpClient.post(
         uri,
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'message': message,
-          'timestamp': DateTime.now().toIso8601String(),
+          'userId': senderId,
+          'message':
+              message
+                  .toJson(), // ensure Message has toJson(); or send the needed fields
         }),
       );
 

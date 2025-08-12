@@ -10,10 +10,13 @@ import '../../../utils/app_logger.dart';
 part 'post_event.dart';
 part 'post_state.dart';
 
+/// PostBloc is now instantiated per team (factory via GetIt).
+/// Pass teamId when creating: GetIt.I<PostBloc>(param1: teamId)
 class PostBloc extends Bloc<PostEvent, PostState> {
+  final String teamId;
   final TeamRepository _teamRepository = GetIt.instance<TeamRepository>();
 
-  PostBloc() : super(PostInitial()) {
+  PostBloc({required this.teamId}) : super(PostInitial()) {
     on<LoadTeamPosts>(_mapLoadTeamPostsToState);
     on<AddPost>(_mapAddPostToState);
     on<LikePost>(_mapLikePostToState);
@@ -22,9 +25,16 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     on<AddComment>(_mapAddCommentToState);
     on<LikeComment>(_mapLikeCommentToState);
     on<UnlikeComment>(_mapUnlikeCommentToState);
+    on<RefreshPosts>(_mapRefreshPostsToState);
+
+    // Initial load for this specific team instance
+    add(LoadTeamPosts(teamId));
   }
 
+  bool _isWrongTeam(String eventTeamId) => eventTeamId != teamId;
+
   _mapLoadTeamPostsToState(LoadTeamPosts event, Emitter<PostState> emit) async {
+    if (_isWrongTeam(event.teamId)) return;
     AppLogger.info('Loading posts for team: ${event.teamId}');
     emit(PostLoading());
     try {
@@ -41,6 +51,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   _mapAddPostToState(AddPost event, Emitter<PostState> emit) async {
+    if (_isWrongTeam(event.teamId)) return;
     AppLogger.info('Adding post: ${event.post.title}');
     try {
       await _teamRepository.addPost(event.post, event.teamId);
@@ -51,6 +62,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   _mapLikePostToState(LikePost event, Emitter<PostState> emit) async {
+    if (_isWrongTeam(event.teamId)) return;
     AppLogger.info('Liking post: ${event.postId} by user: ${event.userId}');
     try {
       await _teamRepository.likePost(event.postId, event.userId);
@@ -71,6 +83,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   _mapUnlikePostToState(UnlikePost event, Emitter<PostState> emit) async {
+    if (_isWrongTeam(event.teamId)) return;
     AppLogger.info('Unliking post: ${event.postId} by user: ${event.userId}');
     try {
       await _teamRepository.likePost(event.postId, event.userId);
@@ -89,6 +102,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   _mapLoadCommentsToState(LoadComments event, Emitter<PostState> emit) async {
+    if (_isWrongTeam(event.teamId)) return;
     AppLogger.info('Loading comments for post: ${event.postId}');
     emit(PostLoading());
     try {
@@ -109,6 +123,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   _mapAddCommentToState(AddComment event, Emitter<PostState> emit) async {
+    if (_isWrongTeam(event.teamId)) return;
     try {
       final updatedPost = await _teamRepository.addComment(
         event.postId,
@@ -116,16 +131,11 @@ class PostBloc extends Bloc<PostEvent, PostState> {
         event.userId,
       );
 
-      // Update the posts list with the new post
       final updatedPosts =
-          event.posts.map((post) {
-            if (post.id == updatedPost.id) {
-              return updatedPost;
-            }
-            return post;
-          }).toList();
+          event.posts
+              .map((post) => post.id == updatedPost.id ? updatedPost : post)
+              .toList();
 
-      // Get the updated comments list
       final updatedComments = updatedPost.comments ?? [];
 
       emit(
@@ -145,8 +155,8 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     LikeComment event,
     Emitter<PostState> emit,
   ) async {
+    if (_isWrongTeam(event.teamId)) return;
     try {
-      // Get current state's comments
       List<Comment> currentComments = [];
       if (state is CommentsLoaded) {
         currentComments = (state as CommentsLoaded).comments;
@@ -157,7 +167,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       } else if (state is CommentAdded) {
         currentComments = (state as CommentAdded).comments;
       } else {
-        // fallback: try to get from the post in event.posts
         Post? post;
         for (final p in event.posts) {
           if (p.id == event.postId) {
@@ -165,8 +174,8 @@ class PostBloc extends Bloc<PostEvent, PostState> {
             break;
           }
         }
-        if (post != null && post.comments != null) {
-          currentComments = post.comments!;
+        if (post?.comments != null) {
+          currentComments = post!.comments!;
         }
       }
 
@@ -177,7 +186,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       );
 
       if (success) {
-        // Locally update likedBy for the comment
         final updatedComments =
             currentComments.map((comment) {
               if (comment.id == event.commentId) {
@@ -190,14 +198,15 @@ class PostBloc extends Bloc<PostEvent, PostState> {
               return comment;
             }).toList();
 
-        // Update the post in our posts list
         final updatedPosts =
-            event.posts.map((post) {
-              if (post.id == event.postId) {
-                return post.copyWith(comments: updatedComments);
-              }
-              return post;
-            }).toList();
+            event.posts
+                .map(
+                  (post) =>
+                      post.id == event.postId
+                          ? post.copyWith(comments: updatedComments)
+                          : post,
+                )
+                .toList();
 
         emit(CommentsLoaded(event.postId, updatedComments, updatedPosts));
       }
@@ -210,8 +219,8 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     UnlikeComment event,
     Emitter<PostState> emit,
   ) async {
+    if (_isWrongTeam(event.teamId)) return;
     try {
-      // Get current state's comments
       List<Comment> currentComments = [];
       if (state is CommentsLoaded) {
         currentComments = (state as CommentsLoaded).comments;
@@ -222,7 +231,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       } else if (state is CommentAdded) {
         currentComments = (state as CommentAdded).comments;
       } else {
-        // fallback: try to get from the post in event.posts
         Post? post;
         for (final p in event.posts) {
           if (p.id == event.postId) {
@@ -230,8 +238,8 @@ class PostBloc extends Bloc<PostEvent, PostState> {
             break;
           }
         }
-        if (post != null && post.comments != null) {
-          currentComments = post.comments!;
+        if (post?.comments != null) {
+          currentComments = post!.comments!;
         }
       }
 
@@ -242,7 +250,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       );
 
       if (success) {
-        // Locally update likedBy for the comment
         final updatedComments =
             currentComments.map((comment) {
               if (comment.id == event.commentId) {
@@ -253,19 +260,25 @@ class PostBloc extends Bloc<PostEvent, PostState> {
               return comment;
             }).toList();
 
-        // Update the post in our posts list
         final updatedPosts =
-            event.posts.map((post) {
-              if (post.id == event.postId) {
-                return post.copyWith(comments: updatedComments);
-              }
-              return post;
-            }).toList();
+            event.posts
+                .map(
+                  (post) =>
+                      post.id == event.postId
+                          ? post.copyWith(comments: updatedComments)
+                          : post,
+                )
+                .toList();
 
         emit(CommentsLoaded(event.postId, updatedComments, updatedPosts));
       }
     } catch (error) {
       emit(PostError(error.toString()));
     }
+  }
+
+  void _mapRefreshPostsToState(RefreshPosts event, Emitter<PostState> emit) {
+    if (_isWrongTeam(event.teamId)) return;
+    add(LoadTeamPosts(event.teamId));
   }
 }

@@ -12,9 +12,9 @@ class LoadMessages extends MessageEvent {
 }
 
 class SendMessage extends MessageEvent {
-  final String message;
-  final String recipientId;
+  final Message message;
+  final String senderId;
   final String? teamId;
 
-  SendMessage(this.message, this.recipientId, {this.teamId});
+  SendMessage(this.message, this.senderId, {this.teamId});
 }

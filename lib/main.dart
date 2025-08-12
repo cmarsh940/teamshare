@@ -79,9 +79,10 @@ Future<void> _initializeDependencies() async {
       GetIt.I.registerSingleton<MessageBloc>(messageBloc);
     }
 
-    final postBloc = PostBloc();
     if (!GetIt.I.isRegistered<PostBloc>()) {
-      GetIt.I.registerSingleton<PostBloc>(postBloc);
+      GetIt.I.registerFactoryParam<PostBloc, String, void>(
+        (teamId, _) => PostBloc(teamId: teamId),
+      );
     }
 
     final notificationRepository = NotificationRepository();

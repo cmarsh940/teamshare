@@ -15,14 +15,12 @@ class PostList extends StatefulWidget {
 }
 
 class _PostListState extends State<PostList> {
-  late PostBloc _postBloc;
   String userId = '';
 
   @override
   void initState() {
     userId = widget.userId;
     super.initState();
-    _postBloc = GetIt.I<PostBloc>();
   }
 
   @override
@@ -48,19 +46,16 @@ class _PostListState extends State<PostList> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<PostBloc, PostState>(
-      bloc: _postBloc,
       listener: (context, state) {
-        // Optionally show snackbars or handle side effects here
+        // side effects if needed
       },
       child: BlocBuilder<PostBloc, PostState>(
-        bloc: _postBloc,
         builder: (context, state) {
-          if (state is PostInitial) {
-            _postBloc.add(LoadTeamPosts(widget.teamId));
-          }
-          if (state is PostLoading) {
+          if (state is PostLoading || state is PostInitial) {
             return const Center(child: CircularProgressIndicator());
-          } else if (state is PostLoaded ||
+          }
+
+          if (state is PostLoaded ||
               state is PostLiked ||
               state is PostUnliked ||
               state is CommentsLoaded ||
@@ -87,7 +82,6 @@ class _PostListState extends State<PostList> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Author row
                           Row(
                             children: [
                               CircleAvatar(
@@ -152,7 +146,6 @@ class _PostListState extends State<PostList> {
                               ),
                             ),
                           const SizedBox(height: 8),
-                          // Instagram-style actions row
                           Row(
                             children: [
                               IconButton(
@@ -168,14 +161,25 @@ class _PostListState extends State<PostList> {
                                           : Colors.grey[700],
                                 ),
                                 onPressed: () {
+                                  final bloc = context.read<PostBloc>();
                                   if (post.likes != null &&
                                       post.likes!.contains(userId)) {
-                                    _postBloc.add(
-                                      UnlikePost(post.id!, userId, posts),
+                                    bloc.add(
+                                      UnlikePost(
+                                        post.id!,
+                                        userId,
+                                        posts,
+                                        widget.teamId,
+                                      ),
                                     );
                                   } else {
-                                    _postBloc.add(
-                                      LikePost(post.id!, userId, posts),
+                                    bloc.add(
+                                      LikePost(
+                                        post.id!,
+                                        userId,
+                                        posts,
+                                        widget.teamId,
+                                      ),
                                     );
                                   }
                                 },
@@ -185,7 +189,10 @@ class _PostListState extends State<PostList> {
                               IconButton(
                                 icon: const Icon(Icons.mode_comment_outlined),
                                 onPressed: () {
-                                  _postBloc.add(LoadComments(post.id, posts));
+                                  final bloc = context.read<PostBloc>();
+                                  bloc.add(
+                                    LoadComments(post.id, posts, widget.teamId),
+                                  );
                                   showModalBottomSheet(
                                     context: context,
                                     isScrollControlled: true,
@@ -196,7 +203,6 @@ class _PostListState extends State<PostList> {
                                     ),
                                     builder: (context) {
                                       return BlocBuilder<PostBloc, PostState>(
-                                        bloc: _postBloc,
                                         builder: (context, state) {
                                           List<Comment> comments = [];
                                           if (state is CommentsLoaded &&
@@ -215,7 +221,7 @@ class _PostListState extends State<PostList> {
                                                     .toList();
                                           }
                                           final TextEditingController
-                                          _commentController =
+                                          commentController =
                                               TextEditingController();
 
                                           return Padding(
@@ -263,7 +269,6 @@ class _PostListState extends State<PostList> {
                                                               ) {
                                                                 final comment =
                                                                     comments[idx];
-                                                                // Adjust this if your comment is an object
                                                                 return ListTile(
                                                                   leading: const CircleAvatar(
                                                                     child: Icon(
@@ -284,10 +289,10 @@ class _PostListState extends State<PostList> {
                                                                         CrossAxisAlignment
                                                                             .start,
                                                                     children: [
-                                                                      if (comment.author !=
-                                                                              null &&
-                                                                          comment.author?.firstName !=
-                                                                              null)
+                                                                      if (comment
+                                                                              .author
+                                                                              ?.firstName !=
+                                                                          null)
                                                                         Text(
                                                                           '${comment.author!.firstName} ${comment.author!.lastName ?? ''}',
                                                                           style: const TextStyle(
@@ -339,26 +344,33 @@ class _PostListState extends State<PostList> {
                                                                               18,
                                                                         ),
                                                                         onPressed: () {
+                                                                          final bloc =
+                                                                              context
+                                                                                  .read<
+                                                                                    PostBloc
+                                                                                  >();
                                                                           if (comment.likedBy !=
                                                                                   null &&
                                                                               comment.likedBy!.contains(
                                                                                 userId,
                                                                               )) {
-                                                                            _postBloc.add(
+                                                                            bloc.add(
                                                                               UnlikeComment(
                                                                                 post.id!,
                                                                                 comment.id!,
                                                                                 userId,
                                                                                 posts,
+                                                                                widget.teamId,
                                                                               ),
                                                                             );
                                                                           } else {
-                                                                            _postBloc.add(
+                                                                            bloc.add(
                                                                               LikeComment(
                                                                                 post.id!,
                                                                                 comment.id!,
                                                                                 userId,
                                                                                 posts,
+                                                                                widget.teamId,
                                                                               ),
                                                                             );
                                                                           }
@@ -386,8 +398,6 @@ class _PostListState extends State<PostList> {
                                                                         vertical:
                                                                             2,
                                                                       ),
-                                                                  minVerticalPadding:
-                                                                      0,
                                                                   dense: true,
                                                                   shape: RoundedRectangleBorder(
                                                                     borderRadius:
@@ -416,7 +426,7 @@ class _PostListState extends State<PostList> {
                                                         Expanded(
                                                           child: TextField(
                                                             controller:
-                                                                _commentController,
+                                                                commentController,
                                                             decoration: const InputDecoration(
                                                               hintText:
                                                                   'Add a comment...',
@@ -440,31 +450,37 @@ class _PostListState extends State<PostList> {
                                                           ),
                                                           onPressed: () {
                                                             final text =
-                                                                _commentController
+                                                                commentController
                                                                     .text
                                                                     .trim();
                                                             if (text
                                                                 .isNotEmpty) {
-                                                              var comment = Comment(
-                                                                '', // id
-                                                                text, // text
-                                                                null, // authorId
+                                                              final comment = Comment(
+                                                                '',
+                                                                text,
                                                                 null,
-                                                                post.id!, // postId
+                                                                null,
+                                                                post.id!,
                                                                 DateTime.now()
                                                                     .toIso8601String(),
                                                                 null,
                                                                 null,
                                                               );
-                                                              _postBloc.add(
-                                                                AddComment(
-                                                                  post.id!,
-                                                                  comment,
-                                                                  userId,
-                                                                  posts,
-                                                                ),
-                                                              );
-                                                              _commentController
+                                                              context
+                                                                  .read<
+                                                                    PostBloc
+                                                                  >()
+                                                                  .add(
+                                                                    AddComment(
+                                                                      post.id!,
+                                                                      comment,
+                                                                      userId,
+                                                                      posts,
+                                                                      widget
+                                                                          .teamId,
+                                                                    ),
+                                                                  );
+                                                              commentController
                                                                   .clear();
                                                             }
                                                           },
@@ -492,14 +508,18 @@ class _PostListState extends State<PostList> {
                 );
               },
             );
-          } else if (state is PostEmpty) {
+          }
+
+          if (state is PostEmpty) {
             return const Center(
               child: Text(
                 'No posts available',
                 style: TextStyle(fontSize: 18, color: Colors.grey),
               ),
             );
-          } else if (state is PostError) {
+          }
+
+          if (state is PostError) {
             return Center(
               child: Text(
                 'Error: ${state.message}',
@@ -507,6 +527,7 @@ class _PostListState extends State<PostList> {
               ),
             );
           }
+
           return const Center(
             child: Text(
               'No posts available',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:teamshare/main.dart';
+import 'package:teamshare/models/message.dart';
 import 'package:teamshare/models/user.dart';
 import 'package:teamshare/pages/message/bloc/message_bloc.dart';
 import 'package:teamshare/pages/team/bloc/team_bloc.dart';
@@ -407,7 +408,7 @@ class _AddMessageWidgetState extends State<AddMessageWidget> {
                                   color:
                                       _selectedMembers.isEmpty
                                           ? Colors.grey[400]
-                                          : Theme.of(context).primaryColor,
+                                          : Colors.lightBlue,
                                   shape: BoxShape.circle,
                                 ),
                                 child: IconButton(
@@ -421,10 +422,16 @@ class _AddMessageWidgetState extends State<AddMessageWidget> {
                                               // Send message to all selected members
                                               for (final member
                                                   in _selectedMembers) {
+                                                Message newMessage = Message(
+                                                  participants:
+                                                      _selectedMembers,
+                                                  body: message,
+                                                  teamId: widget.teamId,
+                                                );
                                                 context.read<MessageBloc>().add(
                                                   SendMessage(
-                                                    message,
-                                                    member.id ?? '',
+                                                    newMessage,
+                                                    widget.userId,
                                                     teamId: widget.teamId,
                                                   ),
                                                 );
