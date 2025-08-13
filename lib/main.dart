@@ -74,10 +74,11 @@ Future<void> _initializeDependencies() async {
       GetIt.I.registerSingleton<DashboardBloc>(dashboardBloc);
     }
 
-    final messageBloc = MessageBloc();
-    if (!GetIt.I.isRegistered<MessageBloc>()) {
-      GetIt.I.registerSingleton<MessageBloc>(messageBloc);
+    // Fresh MessageBloc per request (not a singleton)
+    if (GetIt.I.isRegistered<MessageBloc>()) {
+      GetIt.I.unregister<MessageBloc>();
     }
+    GetIt.I.registerFactory<MessageBloc>(() => MessageBloc());
 
     if (!GetIt.I.isRegistered<PostBloc>()) {
       GetIt.I.registerFactoryParam<PostBloc, String, void>(

@@ -16,6 +16,7 @@ class User {
   String? picture;
   String? token;
   bool? verified;
+  List<String>? chats;
   String? createdAt;
   String? updatedAt;
   @JsonKey(name: '__v')
@@ -32,6 +33,7 @@ class User {
     this.picture,
     this.token,
     this.verified,
+    this.chats,
     this.createdAt,
     this.updatedAt,
     this.v,

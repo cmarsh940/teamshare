@@ -7,10 +7,10 @@ final class MessageInitial extends MessageState {}
 
 final class LoadingMessages extends MessageState {}
 
-final class MessageLoaded extends MessageState {
-  final List<dynamic> messages;
+final class ChatLoaded extends MessageState {
+  final List<Chat> messages;
 
-  MessageLoaded(this.messages);
+  ChatLoaded(this.messages);
 }
 
 final class MessageEmpty extends MessageState {}

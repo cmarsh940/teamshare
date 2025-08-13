@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:teamshare/models/chat.dart';
 import 'package:teamshare/models/message.dart';
 
 import '../constants.dart';
@@ -7,7 +8,7 @@ import '../utils/app_logger.dart';
 
 class MessageRepository {
   /// Fetch messages for a user or team
-  Future<List<String>> fetchMessages(
+  Future<List<Chat>> fetchMessages(
     String id,
     bool isTeamMessage,
     String? teamId,
@@ -23,7 +24,7 @@ class MessageRepository {
       }
 
       final List<dynamic> decoded = jsonDecode(response.body);
-      return decoded.map((message) => message.toString()).toList();
+      return decoded.map((message) => Chat.fromJson(message)).toList();
     } catch (e) {
       AppLogger.error('Failed to fetch messages: $e');
       throw Exception('Failed to fetch messages: $e');

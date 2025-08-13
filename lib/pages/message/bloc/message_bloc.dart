@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meta/meta.dart';
 import 'package:teamshare/data/message_repository.dart';
+import 'package:teamshare/models/chat.dart';
 import 'package:teamshare/models/message.dart';
 
 part 'message_event.dart';
@@ -27,7 +28,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
         event.teamId,
       );
 
-      emit(MessageLoaded(messages));
+      emit(ChatLoaded(messages));
     } catch (error) {
       emit(ErrorLoadingMessages(error.toString()));
     }

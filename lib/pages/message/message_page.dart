@@ -19,32 +19,42 @@ class MessagePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: BlocProvider<MessageBloc>.value(
-          value: GetIt.I<MessageBloc>(),
+    return BlocProvider<MessageBloc>(
+      create:
+          (_) =>
+              GetIt.I<MessageBloc>()
+                ..add(LoadMessages(teamId, isTeamMessages, userId)),
+      child: Scaffold(
+        body: Center(
           child: MessageList(
             teamId: teamId,
             isTeamMessages: isTeamMessages,
             userId: userId,
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (context) => BlocProvider<MessageBloc>.value(
-                    value: GetIt.I<MessageBloc>(),
-                    child: AddMessageWidget(teamId: teamId, userId: userId),
-                  ),
-            ),
-          );
-        },
-        tooltip: 'Create Message',
-        child: const Icon(Icons.add),
+        floatingActionButton: Builder(
+          builder:
+              (ctx) => FloatingActionButton(
+                onPressed: () {
+                  final bloc = ctx.read<MessageBloc>();
+                  Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => BlocProvider<MessageBloc>.value(
+                            value: bloc,
+                            child: AddMessageWidget(
+                              teamId: teamId,
+                              userId: userId,
+                            ),
+                          ),
+                    ),
+                  );
+                },
+                tooltip: 'Create Message',
+                child: const Icon(Icons.add),
+              ),
+        ),
       ),
     );
   }
