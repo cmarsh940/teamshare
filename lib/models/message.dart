@@ -54,7 +54,6 @@ class Message {
 
   @ParticipantsConverter()
   List<User>? participants;
-
   String? teamId;
   List<String> attachments;
   List<String>? readBy;

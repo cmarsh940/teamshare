@@ -23,7 +23,7 @@ class MessagePage extends StatelessWidget {
       create:
           (_) =>
               GetIt.I<MessageBloc>()
-                ..add(LoadMessages(teamId, isTeamMessages, userId)),
+                ..add(LoadChats(teamId, isTeamMessages, userId)),
       child: Scaffold(
         body: Center(
           child: MessageList(

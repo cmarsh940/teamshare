@@ -14,6 +14,7 @@ class Chat {
   String? createdAt;
   String? updatedAt;
   Message? lastMessage;
+  String? teamId;
   @JsonKey(name: '__v')
   int? v;
 
@@ -25,6 +26,7 @@ class Chat {
     this.createdAt,
     this.updatedAt,
     this.lastMessage,
+    this.teamId,
     this.v,
   });
 

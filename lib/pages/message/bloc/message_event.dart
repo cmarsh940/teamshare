@@ -3,12 +3,12 @@ part of 'message_bloc.dart';
 @immutable
 sealed class MessageEvent {}
 
-class LoadMessages extends MessageEvent {
+class LoadChats extends MessageEvent {
   final String? teamId;
   final bool isTeamMessages;
   final String userId;
 
-  LoadMessages(this.teamId, this.isTeamMessages, this.userId);
+  LoadChats(this.teamId, this.isTeamMessages, this.userId);
 }
 
 class SendMessage extends MessageEvent {
@@ -16,5 +16,14 @@ class SendMessage extends MessageEvent {
   final String senderId;
   final String? teamId;
 
-  SendMessage(this.message, this.senderId, {this.teamId});
+  /// When provided, after sending we refresh this chat's messages instead of chat list.
+  final String? chatId;
+
+  SendMessage(this.message, this.senderId, {this.teamId, this.chatId});
+}
+
+class LoadMessages extends MessageEvent {
+  final String chatId;
+
+  LoadMessages(this.chatId);
 }

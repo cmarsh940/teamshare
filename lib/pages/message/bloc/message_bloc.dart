@@ -12,14 +12,12 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
   final MessageRepository _messageRepository = GetIt.I<MessageRepository>();
 
   MessageBloc() : super(MessageInitial()) {
-    on<LoadMessages>(_mapLoadMessagesToState);
+    on<LoadChats>(_mapLoadChatsToState);
     on<SendMessage>(_mapSendMessageToState);
+    on<LoadMessages>(_mapLoadMessagesToState);
   }
 
-  _mapLoadMessagesToState(
-    LoadMessages event,
-    Emitter<MessageState> emit,
-  ) async {
+  _mapLoadChatsToState(LoadChats event, Emitter<MessageState> emit) async {
     emit(LoadingMessages());
     try {
       final messages = await _messageRepository.fetchMessages(
@@ -42,8 +40,26 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
         teamId: event.teamId,
       );
       emit(MessageSent());
-      // Optionally, you can trigger a reload of messages after sending
-      add(LoadMessages(event.teamId, event.teamId != null, event.senderId));
+      if (event.chatId != null) {
+        add(LoadMessages(event.chatId!));
+      } else {
+        add(LoadChats(event.teamId, event.teamId != null, event.senderId));
+      }
+    } catch (error) {
+      emit(ErrorLoadingMessages(error.toString()));
+    }
+  }
+
+  _mapLoadMessagesToState(
+    LoadMessages event,
+    Emitter<MessageState> emit,
+  ) async {
+    emit(LoadingMessages());
+    try {
+      final messages = await _messageRepository.fetchMessagesByChatId(
+        event.chatId,
+      );
+      emit(MessagesLoaded(messages));
     } catch (error) {
       emit(ErrorLoadingMessages(error.toString()));
     }

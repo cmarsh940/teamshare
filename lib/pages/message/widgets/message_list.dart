@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:teamshare/pages/message/bloc/message_bloc.dart';
+import 'package:teamshare/pages/message/widgets/view_message.dart';
 
 class MessageList extends StatefulWidget {
   final String userId;
@@ -109,8 +110,29 @@ class _MessageListState extends State<MessageList> {
                   ),
                 ),
                 onTap: () {
-                  // TODO: Navigate to chat detail
-                  // Navigator.push(...);
+                  final bloc =
+                      context.read<MessageBloc>(); // capture before nav
+                  final teamId = widget.teamId;
+                  final isTeamMessages = widget.isTeamMessages;
+                  final userId = widget.userId;
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => BlocProvider<MessageBloc>.value(
+                            value: bloc,
+                            child: ViewMessage(
+                              chatId: chat.id ?? 'ohhhhNO',
+                              currentUserId: userId,
+                              chatTitle: chat.groupName ?? chatTitle,
+                            ),
+                          ),
+                    ),
+                  ).then((_) {
+                    if (!mounted) return; // prevent using deactivated context
+                    bloc.add(LoadChats(teamId, isTeamMessages, userId));
+                  });
                 },
               );
             },

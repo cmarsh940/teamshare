@@ -65,4 +65,23 @@ class MessageRepository {
       throw Exception('Failed to send message: $e');
     }
   }
+
+  Future<List<Message>> fetchMessagesByChatId(String chatId) async {
+    try {
+      final uri = Uri.parse(fetchMessagesByChatIdURL(chatId));
+      final response = await SecureHttpClient.get(uri);
+
+      if (response.statusCode == 404) {
+        return [];
+      } else if (response.statusCode != 200) {
+        throw Exception('Failed to load messages: ${response.statusCode}');
+      }
+
+      final List<dynamic> decoded = jsonDecode(response.body);
+      return decoded.map((message) => Message.fromJson(message)).toList();
+    } catch (e) {
+      AppLogger.error('Failed to fetch messages by chat ID: $e');
+      throw Exception('Failed to fetch messages by chat ID: $e');
+    }
+  }
 }
