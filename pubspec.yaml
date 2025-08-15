@@ -20,6 +20,7 @@ dependencies:
   get_it: ^8.0.3
   google_maps_flutter: ^2.12.3
   http: ^1.4.0
+  icons_launcher: ^3.0.1
   image_picker: ^1.1.2
   intl: ^0.20.2
   json_annotation: ^4.9.0
@@ -50,7 +51,14 @@ flutter:
     - assets/images/TEAM-4.png
     - assets/images/TEAM-5.png
     - assets/images/TEAM-6.png
-
+    
+icons_launcher:
+  image_path: 'assets/images/TEAM-2.png'
+  platforms:
+    android:
+      enable: true
+    ios:
+      enable: true
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a

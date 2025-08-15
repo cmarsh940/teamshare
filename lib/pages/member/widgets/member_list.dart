@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:teamshare/data/repositories.dart';
 import 'package:teamshare/pages/member/bloc/member_bloc.dart';
+import 'package:teamshare/shared/dialogs/confirmation_dialog.dart';
 
 class MemberList extends StatefulWidget {
   final String teamId;
@@ -125,11 +126,29 @@ class _MemberListState extends State<MemberList> {
                             color: Colors.red,
                           ),
                           tooltip: 'Remove from team',
-                          onPressed: () {
-                            // Dispatch your remove event here
-                            context.read<MemberBloc>().add(
-                              RemoveMemberFromTeam(state.team.id!, member.id!),
+                          onPressed: () async {
+                            final name =
+                                '${member.firstName ?? ''} ${member.lastName ?? ''}'
+                                    .trim();
+                            final confirmed = await showConfirmationDialog(
+                              context,
+                              title: 'Remove Member',
+                              message:
+                                  'Are you sure you want to remove ${name.isEmpty ? 'this member' : name} from the team?',
+                              confirmText: 'Remove',
+                              cancelText: 'Cancel',
+                              destructive: true,
+                              icon: Icons.warning_amber_rounded,
                             );
+                            if (confirmed == true) {
+                              if (!mounted) return;
+                              context.read<MemberBloc>().add(
+                                RemoveMemberFromTeam(
+                                  state.team.id!,
+                                  member.id!,
+                                ),
+                              );
+                            }
                           },
                         )
                         : null,

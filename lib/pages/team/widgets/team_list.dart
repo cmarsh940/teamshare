@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:teamshare/auth/auth_bloc.dart';
 import 'package:teamshare/data/user_repository.dart';
 import 'package:teamshare/pages/team/bloc/team_bloc.dart';
+import 'package:teamshare/shared/dialogs/confirmation_dialog.dart';
 import 'package:teamshare/utils/app_logger.dart';
 
 class TeamList extends StatefulWidget {
@@ -88,10 +89,24 @@ class _TeamListState extends State<TeamList> {
                                       (team['admins'] as List).contains(userId))
                                   ? IconButton(
                                     icon: Icon(Icons.delete),
-                                    onPressed: () {
-                                      context.read<TeamBloc>().add(
-                                        DeleteTeamEvent(teamId: team['_id']),
-                                      );
+                                    onPressed: () async {
+                                      final confirmed =
+                                          await showConfirmationDialog(
+                                            context,
+                                            title: 'Remove Member',
+                                            message:
+                                                'Are you sure you want to remove ${team['name']}?',
+                                            confirmText: 'Remove',
+                                            cancelText: 'Cancel',
+                                            destructive: true,
+                                            icon: Icons.warning_amber_rounded,
+                                          );
+                                      if (confirmed == true) {
+                                        if (!mounted) return;
+                                        context.read<TeamBloc>().add(
+                                          DeleteTeamEvent(teamId: team['_id']),
+                                        );
+                                      }
                                     },
                                   )
                                   : null,
